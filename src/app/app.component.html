@@ -1,0 +1,30 @@
+<div style="width: 100vh; height: 100vw; " id='canvas' tabindex="0"
+    (mousedown)="selectedMode == 'edit_fog' ? mouseDown($event) : null" (mouseup)="selectedMode == 'edit_fog' ? endStroke($event) : null"
+    (mouseout)="selectedMode == 'edit_fog' ? endStroke($event) : null" (mouseenter)="selectedMode == 'edit_fog' ? mouseEnter($event) : null"
+    (mousemove)="selectedMode == 'edit_fog' ? mouseMove($event) : null"></div>
+
+<div class="overlay" [ngStyle]="{'display': (showOverlay) ? 'block' : 'none'}">
+</div>
+
+<app-controls
+    [(map)]="selectedMap"
+    [(paintMode)]="paintMode"
+    (mapChange)="loadMap()"
+    [maps]="maps"
+    [mode]="selectedMode"
+    (uploadMap)="uploadMap()"
+    (deleteMap)="deleteMap($event)"
+    (tokenAdded)="whiteBoard.updateTokens()"
+    (token)="selectedToken">
+</app-controls>
+
+<!--<div id="mode-selection">
+    <mat-button-toggle-group [(ngModel)]="selectedMode" (change)="onModeSelect()">
+        <mat-button-toggle value="edit_fog">
+            Edit Fog
+        </mat-button-toggle>
+        <mat-button-toggle value="move_tokens">
+            Move Tokens
+        </mat-button-toggle>
+    </mat-button-toggle-group>
+</div>-->

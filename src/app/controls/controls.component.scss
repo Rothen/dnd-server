@@ -1,0 +1,98 @@
+#control-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 20vw;
+    height: 100%;
+    background-color: white;
+    overflow: hidden;
+
+    .header {
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        h1 {
+            display: inline-block;
+            margin: 0;
+        }
+    }
+
+    .footer {
+        position: absolute;
+        bottom: 10px;
+
+    }
+
+    .part {
+        float: left;
+        width: calc(100% - 20px);
+        height: calc(100% - 20px);
+        padding: 10px;
+        top: 0;
+        position: absolute;
+        transition: left 0.2s;
+    }
+
+    #map-list {
+        left: 0;
+    }
+
+    #controls-panel {
+        left: 100%;
+    }
+    
+    .example-form {
+        min-width: 150px;
+        max-width: 500px;
+        width: 100%;
+    }
+
+    .full-width {
+        width: 100%;
+    }
+
+    .third-width {
+        width: 32%;
+        margin: 1%;
+
+        &:last-child {
+            margin: 0;
+        }
+    }
+}
+
+#control-container.hide-list {
+    #map-list {
+        left: -100%;
+    }
+
+    #controls-panel {
+        left: 0;
+    }
+}
+
+.example-container {
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+table {
+    width: 100%;
+}
+
+.mat-mdc-row .mat-mdc-cell {
+    border-bottom: 1px solid transparent;
+    border-top: 1px solid transparent;
+    cursor: pointer;
+}
+
+.mat-mdc-row:hover .mat-mdc-cell {
+    border-color: currentColor;
+}
+
+.row-is-selected {
+    font-weight: bold;
+}
