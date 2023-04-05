@@ -4,6 +4,7 @@ import { MatSelectionListChange } from '@angular/material/list';
 import { Token } from '../interfaces/token';
 import { MatTable } from '@angular/material/table';
 import { MapService } from '../services/map/map.service';
+import { Synchronize } from '../services/synchronize/synchronize';
 
 @Component({
     selector: 'app-controls',
@@ -13,6 +14,7 @@ import { MapService } from '../services/map/map.service';
 export class ControlsComponent {
     @ViewChild(MatTable) tokensTable: MatTable<any>;
 
+    @Input() inDmMode: boolean;
     @Input() selectedMap: Map;
     @Input() maps: Map[];
     @Input() selectedToken: Token;

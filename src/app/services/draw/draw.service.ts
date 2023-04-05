@@ -4,6 +4,7 @@ import Konva from 'konva';
 import { Vector2d } from 'konva/lib/types';
 import { HasEventTargetAddRemove } from 'rxjs/internal/observable/fromEvent';
 import { MenuItem } from '../../interfaces/menu-item';
+import { Drawer } from '../../helpers/drawer';
 
 @Injectable({
     providedIn: 'root'
@@ -52,7 +53,7 @@ export class DrawService {
         return this.strokeEndSubject;
     }
 
-    public setPaintMode(paintMode: MenuItem): void {
+    public setPaintMode(paintMode: Drawer): void {
         this.globalCompositeOperation = (paintMode.id === 'paint_fog') ? 'source-over' : 'destination-out';
     }
 

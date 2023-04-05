@@ -1,62 +1,24 @@
 import { Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { WhiteBoard } from '../helpers/white-board';
-import { StorageService } from '../services/storage/storage.service';
 import { Map } from '../interfaces/map';
 import { DrawService } from '../services/draw/draw.service';
-import { map, Observable, from, forkJoin, fromEvent } from 'rxjs';
-import { Vector2d } from 'konva/lib/types';
-import Konva from 'konva';
+import { fromEvent } from 'rxjs';
 import { Token } from '../interfaces/token';
 import { MenuItem } from '../interfaces/menu-item';
-
-export const paintModes: MenuItem[] = [{
-    name: 'Paint Fog',
-    id: 'paint_fog',
-    icon: 'auto_fix_normal'
-}, {
-    name: 'Erase Fog',
-    id: 'erase_fog',
-    icon: 'auto_fix_off'
-}, {
-    name: 'Draw',
-    id: 'paint_fog',
-    icon: 'draw'
-}, {
-    name: 'Erase',
-    id: 'paint_fog',
-    icon: 'highlighter_size_4',
-    iconClass: 'material-symbols-outlined'
-}];
-export const penSizes: MenuItem[] = [{
-    name: 'Small',
-    id: 'small',
-    icon: 'pen_size_1',
-    iconClass: 'material-symbols-outlined'
-}, {
-    name: 'Medium',
-    id: 'medium',
-    icon: 'pen_size_2',
-    iconClass: 'material-symbols-outlined'
-}, {
-    name: 'Large',
-    id: 'large',
-    icon: 'pen_size_3',
-    iconClass: 'material-symbols-outlined'
-}, {
-    name: 'Huge',
-    id: 'huge',
-    icon: 'pen_size_4',
-    iconClass: 'material-symbols-outlined'
-}];
+import { Synchronize } from '../services/synchronize/synchronize';
+import { HUGE, LARGE, MEDIUM, SMALL } from '../helpers/pen-size';
+import { WhiteBoard } from '../helpers/white-board';
+import { Drawer, FogDrawer, FogEraser } from '../helpers/drawer';
 
 @Component({
-  selector: 'app-whiteboard',
-  templateUrl: './whiteboard.component.html',
-  styleUrls: ['./whiteboard.component.scss']
+    selector: 'app-whiteboard',
+    templateUrl: './whiteboard.component.html',
+    styleUrls: ['./whiteboard.component.scss']
 })
 export class WhiteboardComponent implements OnInit, OnChanges {
     @ViewChild('whiteBoard') whiteBoardRef: ElementRef;
 
+    @Input() inDmMode: boolean;
+    @Input() synchronize: Synchronize;
     @Input() selectedMap: Map;
     @Input() selectedToken: Token;
 
@@ -64,27 +26,94 @@ export class WhiteboardComponent implements OnInit, OnChanges {
     @Output() selectedMapChange: EventEmitter<Map> = new EventEmitter();
     @Output() tokensChange: EventEmitter<void> = new EventEmitter();
 
-    public selectedPaintMode: MenuItem = paintModes[0];
-    public selectedPenSize: MenuItem = penSizes[2];
+    public selectedPaintMode: Drawer;
+    public selectedPenSize: MenuItem;
 
-    public paintModes = paintModes;
-    public penSizes = penSizes;
+    public paintModes: Drawer[] = [];
+    public penSizes: MenuItem[] = [
+        SMALL,
+        MEDIUM,
+        LARGE,
+        HUGE
+    ];
 
     private whiteBoard: WhiteBoard;
     private lastTokenSelection: Date;
 
     constructor(
-        private storageService: StorageService,
         private drawService: DrawService
     ) { }
 
     public ngOnInit() {
-        this.whiteBoard = new WhiteBoard('white-board', this.storageService);
+        this.whiteBoard = new WhiteBoard('white-board');
+        this.initLayerVisibility();
+        this.initTokenEvents();
+        this.initSynchronizeEvents();
+    }
+
+    public ngOnChanges(changes: SimpleChanges): void {
+        if (this.selectedMap) {
+            if (changes['selectedMap']) {
+                this.loadMap();
+            }
+            if (changes['tokens']) {
+                this.whiteBoard.updateTokens(this.selectedMap.settings.tokens);
+            }
+        } else {
+            if (this.whiteBoard) {
+                this.whiteBoard.reset(true);
+            }
+        }
+    }
+
+    private initLayerVisibility(): void {
+        if (this.inDmMode) {
+            this.whiteBoard.mapWithFogOfWarLayer.hide();
+            this.whiteBoard.backLayer.show();
+            this.whiteBoard.fogOfWarLayer.show();
+            this.whiteBoard.mapLayer.show();
+            this.whiteBoard.dmNotesLayer.show();
+        } else {
+            this.whiteBoard.mapWithFogOfWarLayer.show();
+            this.whiteBoard.backLayer.hide();
+            this.whiteBoard.fogOfWarLayer.hide();
+            this.whiteBoard.mapLayer.hide();
+            this.whiteBoard.dmNotesLayer.hide();
+        }
+    }
+
+    private initToolbox(): void {
+        this.paintModes = this.inDmMode ? [
+            new FogDrawer(
+                this.drawService,
+                this.whiteBoardRef.nativeElement,
+                this.synchronize,
+                this.whiteBoard,
+                this.whiteBoard.fogOfWarLayer,
+                { x: this.selectedMap.settings.width, y: this.selectedMap.settings.height }),
+            new FogEraser(
+                this.drawService,
+                this.whiteBoardRef.nativeElement,
+                this.synchronize,
+                this.whiteBoard,
+                this.whiteBoard.fogOfWarLayer,
+                { x: this.selectedMap.settings.width, y: this.selectedMap.settings.height })
+        ] : [];
+
+        this.selectedPaintMode = this.inDmMode ? this.paintModes[0] : null;
+        if (this.inDmMode) {
+            this.selectedPaintMode.activate();
+        }
+        this.selectedPenSize = this.inDmMode ? LARGE : SMALL;
+    }
+
+    private initTokenEvents(): void {
         this.whiteBoard.tokenSelected.subscribe(token => {
             this.selectedToken = token;
             this.selectedTokenChange.next(this.selectedToken);
             this.lastTokenSelection = new Date();
         });
+
         fromEvent(this.whiteBoard.stage, 'click').subscribe((event) => {
             if (this.lastTokenSelection) {
                 const delta = new Date().getTime() - this.lastTokenSelection.getTime();
@@ -95,75 +124,29 @@ export class WhiteboardComponent implements OnInit, OnChanges {
             this.selectedToken = null;
             this.selectedTokenChange.next(null);
         });
-        this.whiteBoard.tokenMovedSubject.subscribe(token => {
-            this.tokensChange.next()
+        this.whiteBoard.tokensChanged.subscribe(token => {
+            this.synchronize.updateSettings(this.selectedMap.name, this.selectedMap.settings);
         });
     }
 
-    public ngOnChanges(changes: SimpleChanges): void {
-        if (this.selectedMap) {
-            if (changes['selectedMap']) {
-                this.loadMap();
-            }
-            if (changes['tokens']) {
-                this.whiteBoard.updateTokens();
-            }
-        } else {
-            if (this.whiteBoard) {
-                this.whiteBoard.reset(true);
-            }
-        }
+    private initSynchronizeEvents(): void {
+        this.synchronize.mapUpdateRecieved.subscribe(update => this.whiteBoard.loadMap(update.value, this.inDmMode));
+        this.synchronize.scenarioMapUpdateRecieved.subscribe(update => this.whiteBoard.updateScenarioMap(update.value));
+        this.synchronize.fogOfWarUpdateRecieved.subscribe(update => this.whiteBoard.updateFogOfWar(update.value));
+        this.synchronize.mapWithFogOfWarUpdateRecieved.subscribe(update => this.whiteBoard.updateMapWithFogOfWar(update.value));
+        this.synchronize.dmNotesUpdateRecieved.subscribe(update => this.whiteBoard.updateDmNotes(update.value));
+        this.synchronize.playerNotesUpdateRecieved.subscribe(update => this.whiteBoard.updatePlayerNotes(update.value));
+        this.synchronize.settingsUpdateRecieved.subscribe(update => this.whiteBoard.updateSettings(update.value));
     }
 
     public loadMap(): void {
-        this.whiteBoard.loadMap(this.selectedMap);
-        this.drawService.setCanvas(
-            this.whiteBoardRef.nativeElement,
-            this.whiteBoard.stage,
-            this.whiteBoard.fogOfWarLayer,
-            { x: this.selectedMap.settings.width, y: this.selectedMap.settings.height }
-        ).subscribe(_ => this.storeWhiteBoard());
+        this.whiteBoard.loadMap(this.selectedMap, this.inDmMode);
+        this.initToolbox();
     }
 
-    private storeWhiteBoard(): Observable<string> {
-        const observable = this.createMapWithFogOfWarDataURL();
-
-        observable.subscribe(mapWithFogOfWar => {
-            this.selectedMap.scenarioMap = this.whiteBoard.getScenarioMapDataURL();
-            this.selectedMap.fogOfWar = this.whiteBoard.getFogOfWarDataURL();
-            this.selectedMap.mapWithFogOfWar = mapWithFogOfWar;
-            this.selectedMap.dmNotes = this.whiteBoard.getDmNotesDataURL();
-            this.selectedMap.playerNotes = this.whiteBoard.getPlayerNotesDataURL();
-
-            this.storageService.storeMap(this.selectedMap);
-            this.selectedMapChange.next(this.selectedMap);
-            return this.selectedMap;
-        });
-
-        return observable;
-    }
-
-    private createMapWithFogOfWarDataURL(): Observable<string> {
-        const pos = this.whiteBoard.stage.getPosition();
-        const scale = this.whiteBoard.stage.scale() as Vector2d;
-        const rec = { x: pos.x, y: pos.y, width: this.selectedMap.settings.width * scale.x, height: this.selectedMap.settings.height * scale.y, pixelRatio: 1 / scale.y };
-        const observables = [
-            from(this.whiteBoard.backLayer.toImage(rec)),
-            from(this.whiteBoard.fogOfWarLayer.toImage(rec))
-        ];
-
-        return forkJoin(observables).pipe(map(res => {
-            const group = new Konva.Group();
-
-            group.add(new Konva.Image({ image: res[0] as any }));
-            group.add(new Konva.Image({ image: res[1] as any }));
-
-            return group.toDataURL();
-        }));
-    }
-
-    public setSelectedPaintMode(paintMode: MenuItem): void {
+    public setSelectedPaintMode(paintMode: Drawer): void {
         this.selectedPaintMode = paintMode;
+        this.selectedPaintMode.activate();
         this.drawService.setPaintMode(this.selectedPaintMode);
     }
 

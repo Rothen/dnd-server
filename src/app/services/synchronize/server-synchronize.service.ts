@@ -8,7 +8,7 @@ import { WebSocketServerService } from '../web-socket-server/web-socket-server.s
 @Injectable({
     providedIn: 'root'
 })
-export class ServerSynchronize extends Synchronize {
+export class ServerSynchronizeService extends Synchronize {
     constructor(
         private storageService: StorageService,
         private webSocketServerService: WebSocketServerService
@@ -28,9 +28,18 @@ export class ServerSynchronize extends Synchronize {
         }
     }
 
+    public startSynchronizing(): void {
+        this.webSocketServerService.start();
+    }
+
+    public stopSynchronizing(): void {
+        this.webSocketServerService.stop();
+    }
+
     public updateMap(map: Map): void {
         this.storageService.storeMap(map);
         this.webSocketServerService.updateClients({
+            mapName: map.name,
             update: 'map',
             value: map
         });
@@ -39,6 +48,7 @@ export class ServerSynchronize extends Synchronize {
     public updateScenarioMap(mapName: string, scenarioMap: string): void {
         this.storageService.storeMapFile(mapName, scenarioMap);
         this.webSocketServerService.updateClients({
+            mapName: mapName,
             update: 'scenario_map',
             value: scenarioMap
         });
@@ -47,6 +57,7 @@ export class ServerSynchronize extends Synchronize {
     public updateFogOfWar(mapName: string, fogOfWar: string): void {
         this.storageService.storeFogOfWarFile(mapName, fogOfWar);
         this.webSocketServerService.updateClients({
+            mapName: mapName,
             update: 'fog_of_war',
             value: fogOfWar
         });
@@ -55,6 +66,7 @@ export class ServerSynchronize extends Synchronize {
     public updateMapWithFogOfWar(mapName: string, mapWithFogOfWar: string): void {
         this.storageService.storeMapWithFogOfWarFile(mapName, mapWithFogOfWar);
         this.webSocketServerService.updateClients({
+            mapName: mapName,
             update: 'map_with_fog_of_war',
             value: mapWithFogOfWar
         });
@@ -63,6 +75,7 @@ export class ServerSynchronize extends Synchronize {
     public updateDmNotes(mapName: string, dmNotes: string): void {
         this.storageService.storeDmNotesFile(mapName, dmNotes);
         this.webSocketServerService.updateClients({
+            mapName: mapName,
             update: 'dm_notes',
             value: dmNotes
         });
@@ -71,6 +84,7 @@ export class ServerSynchronize extends Synchronize {
     public updatePlayerNotes(mapName: string, playerNotes: string): void {
         this.storageService.storePlayerNotesFile(mapName, playerNotes);
         this.webSocketServerService.updateClients({
+            mapName: mapName,
             update: 'player_notes',
             value: playerNotes
         });
@@ -79,6 +93,7 @@ export class ServerSynchronize extends Synchronize {
     public updateSettings(mapName: string, mapSettings: MapSettings): void {
         this.storageService.storeSettingsFile(mapName, mapSettings);
         this.webSocketServerService.updateClients({
+            mapName: mapName,
             update: 'settings',
             value: mapSettings
         });

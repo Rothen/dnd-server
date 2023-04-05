@@ -11,6 +11,7 @@ export class WebSocketServerService {
     ws: typeof ws;
     dgram: typeof dgram;
 
+    private dgramSocket: dgram.Socket;
     private server: ws.WebSocketServer;
     private clients: ws.WebSocket[] = [];
 
@@ -21,9 +22,23 @@ export class WebSocketServerService {
         if (this.isElectron) {
             this.ws = window.require('ws');
             this.dgram = window.require('dgram');
+        }
+    }
 
-            this.startWebSocketServer();
-            this.startUDPServer();
+    public start(): void {
+        this.startWebSocketServer();
+        this.startUDPServer();
+    }
+
+    public stop(): void {
+        if (this.dgramSocket) {
+            this.dgramSocket.close();
+        }
+        
+        this.clients.forEach(client => client.close());
+
+        if (this.server) {
+            this.server.close();
         }
     }
 
@@ -44,20 +59,20 @@ export class WebSocketServerService {
     }
 
     private startUDPServer(): void {
-        const socket = this.dgram.createSocket('udp4');
+        this.dgramSocket = this.dgram.createSocket('udp4');
 
-        socket.on('listening', function () {
-            const address = socket.address();
+        this.dgramSocket.on('listening', () => {
+            const address = this.dgramSocket.address();
             console.log('UDP socket listening on ' + address.address + ":" + address.port);
         });
 
-        socket.on('message', function (message, remote) {
+        this.dgramSocket.on('message', (message, remote) => {
             console.log('SERVER RECEIVED:', remote.address + ':' + remote.port + ' - ' + message);
             const response = "Hellow there!";
-            socket.send(response, 0, response.length, remote.port, remote.address);
+            this.dgramSocket.send(response, 0, response.length, remote.port, remote.address);
         });
 
-        socket.bind(5555);
+        this.dgramSocket.bind(5555);
     }
 
     public updateClient(client: ws.WebSocket, data: any): void {

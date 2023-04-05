@@ -1,5 +1,6 @@
 <mat-toolbar color="primary" class="mat-elevation-z8" style="z-index: 110; position: fixed; top: 0; left: 0;">
-    <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Example icon-button with a menu" matTooltip="Maps">
+    <button *ngIf="inDmMode" mat-icon-button [matMenuTriggerFor]="menu" aria-label="Example icon-button with a menu"
+        matTooltip="Maps">
         <mat-icon>menu</mat-icon>
     </button>
     <mat-menu #menu="matMenu">
@@ -13,9 +14,10 @@
         </button>
     </mat-menu>
 
-    <h1 style="margin: 0;">D&D DM Map</h1><span style="width: 50px;"></span>
+    <h1 *ngIf="inDmMode" style="margin: 0;">D&D DM Map</h1>
+    <h1 *ngIf="!inDmMode" style="margin: 0;">D&D Player Map</h1><span style="width: 50px;"></span>
     <h2 style="margin: 0;" *ngIf="selectedMap">{{selectedMap.name}}</h2>
-    
+
     <span class="example-spacer"></span>
 
     <button mat-icon-button class="example-icon favorite-icon" aria-label="Example icon-button with heart icon">
@@ -26,7 +28,8 @@
     </button>
 </mat-toolbar>
 
-<button *ngIf="selectedMap" mat-fab color="primary" [matMenuTriggerFor]="addItemMenu" matTooltip="add" style="position: fixed; right: 10px; bottom: 10px;">
+<button *ngIf="selectedMap && inDmMode" mat-fab color="primary" [matMenuTriggerFor]="addItemMenu" matTooltip="add"
+    style="position: fixed; right: 10px; bottom: 10px;">
     <mat-icon>add</mat-icon>
 </button>
 <mat-menu #addItemMenu="matMenu">
@@ -44,14 +47,17 @@
     </button>
 </mat-menu>
 
-<mat-card *ngIf="selectedToken" style="position: fixed; left: 10px; bottom: 10px; width: 400px;">
+<mat-card *ngIf="selectedToken && inDmMode" style="position: fixed; left: 10px; bottom: 10px; width: 400px;">
     <mat-card-header>
-        <mat-card-title style="color: white; height: 48px; width: 100%; display: flex; justify-content: space-between; align-items: center;">
+        <mat-card-title
+            style="color: white; height: 48px; width: 100%; display: flex; justify-content: space-between; align-items: center;">
             <span>{{selectedToken.name}}</span>
-            <button *ngIf="!selectedToken.hide" mat-icon-button matTooltip="Hide" (click)="selectedToken.hide = true;tokensUpdated.next()">
+            <button *ngIf="!selectedToken.hide" mat-icon-button matTooltip="Hide"
+                (click)="selectedToken.hide = true;tokensUpdated.next()">
                 <mat-icon>visibility</mat-icon>
             </button>
-            <button *ngIf="selectedToken.hide" mat-icon-button matTooltip="Show" (click)="selectedToken.hide = false;tokensUpdated.next()">
+            <button *ngIf="selectedToken.hide" mat-icon-button matTooltip="Show"
+                (click)="selectedToken.hide = false;tokensUpdated.next()">
                 <mat-icon>visibility_off</mat-icon>
             </button>
         </mat-card-title>
@@ -61,7 +67,7 @@
             <mat-label>Name</mat-label>
             <input matInput [(ngModel)]="selectedToken.name" (change)="tokensUpdated.next()">
         </mat-form-field>
-    
+
         <mat-form-field class="third-width">
             <mat-label>Type</mat-label>
             <mat-select [(ngModel)]="selectedToken.type" (selectionChange)="tokensUpdated.next()">
@@ -70,7 +76,7 @@
                 <mat-option value="npc">NPC</mat-option>
             </mat-select>
         </mat-form-field>
-    
+
         <mat-form-field class="third-width">
             <mat-label>Size</mat-label>
             <mat-select [(ngModel)]="selectedToken.size" (selectionChange)="tokensUpdated.next()">
@@ -82,19 +88,21 @@
                 <mat-option value="gargantuan">Gargantuan</mat-option>
             </mat-select>
         </mat-form-field>
-    
+
         <table class="full-width" cellspacing="0">
             <tr>
                 <td style="width: 50%;">
                     <mat-form-field style="width: 175px;">
                         <mat-label>Health</mat-label>
-                        <input matInput type="number" [(ngModel)]="selectedToken.health" (change)="tokensUpdated.next()">
+                        <input matInput type="number" [(ngModel)]="selectedToken.health"
+                            (change)="tokensUpdated.next()">
                     </mat-form-field>
                 </td>
                 <td style="width: 50%;">
                     <mat-form-field style="width: 175px;">
                         <mat-label>Max Helath</mat-label>
-                        <input matInput type="number" [(ngModel)]="selectedToken.maxHealth" (change)="tokensUpdated.next()">
+                        <input matInput type="number" [(ngModel)]="selectedToken.maxHealth"
+                            (change)="tokensUpdated.next()">
                     </mat-form-field>
                 </td>
             </tr>
