@@ -6,7 +6,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "angular-electron": {
+    "dnd": {
       "root": "",
       "sourceRoot": "src",
       "projectType": "application",
@@ -113,27 +113,27 @@
         "serve": {
           "builder": "@angular-builders/custom-webpack:dev-server",
           "options": {
-            "browserTarget": "angular-electron:build"
+            "browserTarget": "dnd:build"
           },
           "configurations": {
             "dev": {
-              "browserTarget": "angular-electron:build:dev"
+              "browserTarget": "dnd:build:dev"
             },
             "production": {
-              "browserTarget": "angular-electron:build:production"
+              "browserTarget": "dnd:build:production"
             },
             "web": {
-              "browserTarget": "angular-electron:build:web"
+              "browserTarget": "dnd:build:web"
             },
             "web-production": {
-              "browserTarget": "angular-electron:build:web-production"
+              "browserTarget": "dnd:build:web-production"
             }
           }
         },
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "angular-electron:build"
+            "browserTarget": "dnd:build"
           }
         },
         "test": {
@@ -170,7 +170,7 @@
         }
       }
     },
-    "angular-electron-e2e": {
+    "dnd-e2e": {
       "root": "e2e",
       "projectType": "application",
       "architect": {
@@ -185,7 +185,7 @@
       }
     }
   },
-  "defaultProject": "angular-electron",
+  "defaultProject": "dnd",
   "schematics": {
     "@angular-eslint/schematics:application": {
       "setParserOptionsProject": true

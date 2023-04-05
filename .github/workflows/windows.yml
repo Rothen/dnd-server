@@ -62,3 +62,8 @@ jobs:
 
     - name: Build the app
       run: npm run electron:build
+    - name: Archive executable
+      uses: actions/upload-artifact@v3
+      with:
+        name: dnd
+        path: release/win-unpacked
