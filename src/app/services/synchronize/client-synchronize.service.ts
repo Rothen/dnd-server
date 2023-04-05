@@ -18,6 +18,10 @@ export class ClientSynchronizeService extends Synchronize {
         }
     }
 
+    get isElectron(): boolean {
+        return !!(window && window.process && window.process.type);
+    }
+
     public startSynchronizing(): void {
         this.webSocketService.start();
     }
@@ -48,7 +52,7 @@ export class ClientSynchronizeService extends Synchronize {
 
     public updatePlayerNotes(mapName: string, playerNotes: string): void {
         this.webSocketService.updateServer({
-            mapName: mapName,
+            mapName,
             update: 'player_notes',
             value: playerNotes
         });
@@ -56,13 +60,9 @@ export class ClientSynchronizeService extends Synchronize {
 
     public updateSettings(mapName: string, mapSettings: MapSettings): void {
         this.webSocketService.updateServer({
-            mapName: mapName,
+            mapName,
             update: 'settings',
             value: mapSettings
         });
-    }
-
-    get isElectron(): boolean {
-        return !!(window && window.process && window.process.type);
     }
 }

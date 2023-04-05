@@ -24,7 +24,7 @@ export class MapService {
             mapWithFogOfWar.add(fogOfWar);
 
             return {
-                name: name,
+                name,
                 scenarioMap: scenarioMap.toDataURL({ x: 0, y: 0, width: mapImage.naturalWidth, height: mapImage.naturalHeight }),
                 fogOfWar: fogOfWar.toDataURL({ x: 0, y: 0, width: mapImage.naturalWidth, height: mapImage.naturalHeight }),
                 mapWithFogOfWar: mapWithFogOfWar.toDataURL({ x: 0, y: 0, width: mapImage.naturalWidth, height: mapImage.naturalHeight }),
@@ -34,7 +34,7 @@ export class MapService {
                     id: this.createUUIDv4(),
                     width: mapImage.naturalWidth,
                     height: mapImage.naturalHeight,
-                    pixelPerUnit: pixelPerUnit,
+                    pixelPerUnit,
                     tokens: []
                 }
             };
@@ -45,27 +45,29 @@ export class MapService {
         return observable;
     }
 
-    public addToken(map: Map, type: 'player' | 'npc' | 'enemy'): Token {
+    public addToken(mapToAdd: Map, type: 'player' | 'npc' | 'enemy'): Token {
         const token: Token = {
             id: this.createUUIDv4(),
             name: '',
             size: 'medium',
-            type: type,
+            type,
             hide: true,
             position: { x: 0, y: 0 }
         };
 
-        map.settings.tokens.push(token);
+        mapToAdd.settings.tokens.push(token);
 
         return token;
     }
 
     public createUUIDv4(): string {
-        var dt = new Date().getTime();
-        var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-            var r = (dt + Math.random() * 16) % 16 | 0;
+        let dt = new Date().getTime();
+        const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            /*eslint no-bitwise: ["error", { "allow": ["|", "&"] }] */
+            const r = (dt + Math.random() * 16) % 16 | 0;
             dt = Math.floor(dt / 16);
-            return (c == 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            /*eslint no-bitwise: ["error", { "allow": ["|", "&"] }] */
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
         });
         return uuid;
     }

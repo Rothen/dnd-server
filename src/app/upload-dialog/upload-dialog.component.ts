@@ -3,16 +3,16 @@ import { MatDialogRef } from '@angular/material/dialog';
 
 @Component({
     selector: 'app-upload-dialog',
-    templateUrl: 'upload-dialog.html',
-    styleUrls: ['./upload-dialog.scss']
+    templateUrl: 'upload-dialog.component.html',
+    styleUrls: ['./upload-dialog.component.scss']
 })
-export class UploadDialog {
+export class UploadDialogComponent {
     public mapName: string;
     public pixelPerUnit: number;
     private file: any;
     private fileBuffer: ArrayBuffer;
 
-    constructor(public dialogRef: MatDialogRef<UploadDialog>) { }
+    constructor(public dialogRef: MatDialogRef<UploadDialogComponent>) { }
 
     public onFileSelected(): void {
         const inputNode: any = document.querySelector('#file');
@@ -30,10 +30,10 @@ export class UploadDialog {
     }
 
     public closeDialog() {
-        if (this.mapName == null || this.mapName.length == 0 || this.file == null || this.pixelPerUnit == null) {
+        if (this.mapName === null || this.mapName.length === 0 || this.file === null || this.pixelPerUnit === null) {
             return;
         }
-        
+
         this.dialogRef.close({
             name: this.mapName,
             map: this.file,

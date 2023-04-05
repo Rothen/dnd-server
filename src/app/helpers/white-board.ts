@@ -1,9 +1,9 @@
-import Konva from "konva";
-import { Vector2d } from "konva/lib/types";
-import { fromEvent, Subscription, first, Subject, throttleTime } from "rxjs";
-import { Map } from "../interfaces/map";
-import { Token } from "../interfaces/token";
-import { MapSettings } from "../interfaces/map-settings";
+import Konva from 'konva';
+import { Vector2d } from 'konva/lib/types';
+import { fromEvent, Subscription, first, Subject, throttleTime } from 'rxjs';
+import { Map } from '../interfaces/map';
+import { Token } from '../interfaces/token';
+import { MapSettings } from '../interfaces/map-settings';
 
 export class WhiteBoard {
     public stage: Konva.Stage;
@@ -15,14 +15,11 @@ export class WhiteBoard {
     public playerNotesLayer: Konva.Layer;
     public pointerLayer: Konva.Layer;
     public tokenSelected: Subject<Token> = new Subject();
-
     public map: Map;
+    public tokensChanged: Subject<Token> = new Subject();
+    public inDmMode: boolean;
 
     protected subscriptions: Subscription[] = [];
-
-    public tokensChanged: Subject<Token> = new Subject();
-
-    public inDmMode: boolean;
 
     constructor(containerId: string) {
         Konva.dragButtons = [2];
@@ -32,11 +29,14 @@ export class WhiteBoard {
 
     public loadMap(map: Map, inDmMode: boolean) {
         this.inDmMode = inDmMode;
-        const force = !this.map || this.map.settings.id != map.settings.id;
+        const force = !this.map || this.map.settings.id !== map.settings.id;
         this.reset(force);
         this.map = map;
         if (force) {
-            this.stage.absolutePosition({ x: (window.innerWidth - this.map.settings.width) / 2, y: (window.innerHeight - this.map.settings.height) / 2 });
+            this.stage.absolutePosition({
+                x: (window.innerWidth - this.map.settings.width) / 2,
+                y: (window.innerHeight - this.map.settings.height) / 2
+            });
         }
 
         this.updateScenarioMap(this.map.scenarioMap);
@@ -56,63 +56,6 @@ export class WhiteBoard {
             this.drawToken(token);
         });
         this.fixTokenEvents(tokens);
-    }
-
-    protected drawToken(token: Token): void {
-        if (!this.inDmMode && token.hide) {
-            return;
-        }
-        const scale: Vector2d = { x: 1, y: 1 };
-        const size = { width: this.map.settings.pixelPerUnit, height: this.map.settings.pixelPerUnit };
-        let fontSize = this.map.settings.pixelPerUnit * 0.7;
-        const opacity = (token.hide) ? 0.7 : 1;
-
-        switch (token.size) {
-            case 'tiny':
-                size.width *= 0.5;
-                size.height *= 0.5;
-                fontSize *= 0.5;
-                break;
-            case 'small':
-                size.width *= 1;
-                size.height *= 1;
-                fontSize *= 1;
-                break;
-            case 'medium':
-                size.width *= 1;
-                size.height *= 1;
-                fontSize *= 1;
-                break;
-            case 'large':
-                size.width *= 2;
-                size.height *= 2;
-                fontSize *= 2;
-                break;
-            case 'huge':
-                size.width *= 3;
-                size.height *= 3;
-                fontSize *= 3;
-                break;
-            case 'gargantuan':
-                size.width *= 4;
-                size.height *= 4;
-                fontSize *= 4;
-                break;
-        }
-
-        const tokenGroup = new Konva.Group({ width: size.width, height: size.height, listening: true, draggable: true, x: token.position.x, y: token.position.y, scale: scale, id: token.id, opacity: opacity });
-        let color = 'green';
-
-        if (token.type === 'npc') {
-            color = 'bisque';
-        } else if (token.type === 'enemy') {
-            color = 'red';
-        }
-
-        tokenGroup.add(new Konva.Circle({ fill: color, width: size.width, height: size.height, scale: scale }));
-        tokenGroup.add(new Konva.Text({ fontStyle: 'bold', text: token.name.charAt(0), fontSize: fontSize, verticalAlign: 'middle', align: 'center', width: size.width, height: size.height, x: -size.width / 2 * scale.x, y: -size.height / 2 * scale.y, scale: scale }));
-
-        this.pointerLayer.add(tokenGroup);
     }
 
     public reset(force: boolean): void {
@@ -137,8 +80,8 @@ export class WhiteBoard {
         const height = window.innerHeight;
 
         this.stage = new Konva.Stage({
-            width: width,
-            height: height,
+            width,
+            height,
             container: containerId
         });
 
@@ -148,7 +91,7 @@ export class WhiteBoard {
             const position = e.currentTarget.position();
         });
 
-        window.addEventListener('resize', event => this.stage.size({ width: window.innerWidth, height: window.innerHeight }))
+        window.addEventListener('resize', event => this.stage.size({ width: window.innerWidth, height: window.innerHeight }));
 
         const scaleBy = 1.1;
         this.stage.on('wheel', (e) => {
@@ -212,28 +155,52 @@ export class WhiteBoard {
     public getScenarioMapDataURL(): string {
         const pos = this.stage.getPosition();
         const scale = this.stage.scale() as Vector2d;
-        const rec = { x: pos.x, y: pos.y, width: this.map.settings.width * scale.x, height: this.map.settings.height * scale.y, pixelRatio: 1 / scale.y };
+        const rec = {
+            x: pos.x,
+            y: pos.y,
+            width: this.map.settings.width * scale.x,
+            height: this.map.settings.height * scale.y,
+            pixelRatio: 1 / scale.y
+        };
         return this.backLayer.toDataURL(rec);
     }
 
     public getFogOfWarDataURL(): string {
         const pos = this.stage.getPosition();
         const scale = this.stage.scale() as Vector2d;
-        const rec = { x: pos.x, y: pos.y, width: this.map.settings.width * scale.x, height: this.map.settings.height * scale.y, pixelRatio: 1 / scale.y };
+        const rec = {
+            x: pos.x,
+            y: pos.y,
+            width: this.map.settings.width * scale.x,
+            height: this.map.settings.height * scale.y,
+            pixelRatio: 1 / scale.y
+        };
         return this.fogOfWarLayer.toDataURL(rec);
     }
 
     public getDmNotesDataURL(): string {
         const pos = this.stage.getPosition();
         const scale = this.stage.scale() as Vector2d;
-        const rec = { x: 0, y: 0, width: 0 * scale.x, height: 0 * scale.y, pixelRatio: 1 / scale.y };
+        const rec = {
+            x: 0,
+            y: 0,
+            width: 0 * scale.x,
+            height: 0 * scale.y,
+            pixelRatio: 1 / scale.y
+        };
         return this.dmNotesLayer.toDataURL(rec);
     }
 
     public getPlayerNotesDataURL(): string {
         const pos = this.stage.getPosition();
         const scale = this.stage.scale() as Vector2d;
-        const rec = { x: 0, y: 0, width: 0 * scale.x, height: 0 * scale.y, pixelRatio: 1 / scale.y };
+        const rec = {
+            x: 0,
+            y: 0,
+            width: 0 * scale.x,
+            height: 0 * scale.y,
+            pixelRatio: 1 / scale.y
+        };
         return this.playerNotesLayer.toDataURL(rec);
     }
 
@@ -260,37 +227,115 @@ export class WhiteBoard {
 
     public updateSettings(mapSettings: MapSettings): void {
         this.updateTokens(mapSettings.tokens);
-        /*let playerNotesChildren = this.pointerLayer.getChildren();
+    }
 
-        for (const token of mapSettings.tokens) {
-            const tokenGroup = playerNotesChildren.find(tokenGroup => tokenGroup.id() == token.id);
-
-            if (tokenGroup) {
-                tokenGroup.position(token.position);
-            } else {
-                this.drawToken(token);
-            }
+    protected updateLayer(layer: Konva.Layer, image: string, opacity: number = 1): void {
+        if (opacity === undefined || opacity === null) {
+            opacity = 1;
         }
 
-        playerNotesChildren = this.pointerLayer.getChildren();
+        const htmlImage = new Image();
 
-        for (const tokenGroup of playerNotesChildren) {
-            const token = mapSettings.tokens.find(token => token.id == tokenGroup.id());
+        fromEvent(htmlImage, 'load').pipe(first()).subscribe(_ => {
+            layer.add(new Konva.Image({ image: htmlImage, opacity }));
+        });
 
-            if (!token) {
-                tokenGroup.destroy();
-            }
+        htmlImage.src = image;
+    }
+
+    protected drawToken(token: Token): void {
+        if (!this.inDmMode && token.hide) {
+            return;
         }
-        this.fixTokenEvents(mapSettings.tokens);*/
+        const scale: Vector2d = { x: 1, y: 1 };
+        const size = {
+            width: this.map.settings.pixelPerUnit,
+            height: this.map.settings.pixelPerUnit
+        };
+        let fontSize = this.map.settings.pixelPerUnit * 0.7;
+        const opacity = (token.hide) ? 0.7 : 1;
+
+        switch (token.size) {
+            case 'tiny':
+                size.width *= 0.5;
+                size.height *= 0.5;
+                fontSize *= 0.5;
+                break;
+            case 'small':
+                size.width *= 1;
+                size.height *= 1;
+                fontSize *= 1;
+                break;
+            case 'medium':
+                size.width *= 1;
+                size.height *= 1;
+                fontSize *= 1;
+                break;
+            case 'large':
+                size.width *= 2;
+                size.height *= 2;
+                fontSize *= 2;
+                break;
+            case 'huge':
+                size.width *= 3;
+                size.height *= 3;
+                fontSize *= 3;
+                break;
+            case 'gargantuan':
+                size.width *= 4;
+                size.height *= 4;
+                fontSize *= 4;
+                break;
+        }
+
+        const tokenGroup = new Konva.Group({
+            width: size.width,
+            height: size.height,
+            listening: true,
+            draggable: true,
+            x: token.position.x,
+            y: token.position.y,
+            scale,
+            id: token.id, opacity
+        });
+
+        let color = 'green';
+
+        if (token.type === 'npc') {
+            color = 'bisque';
+        } else if (token.type === 'enemy') {
+            color = 'red';
+        }
+
+        tokenGroup.add(new Konva.Circle({
+            fill: color,
+            width: size.width,
+            height: size.height,
+            scale
+        }));
+        tokenGroup.add(new Konva.Text({
+            fontStyle: 'bold',
+            text: token.name.charAt(0),
+            fontSize,
+            verticalAlign: 'middle',
+            align: 'center',
+            width: size.width,
+            height: size.height,
+            x: -size.width / 2 * scale.x,
+            y: -size.height / 2 * scale.y,
+            scale
+        }));
+
+        this.pointerLayer.add(tokenGroup);
     }
 
     private fixTokenEvents(tokens: Token[]): void {
         this.subscriptions.forEach(subscription => subscription.unsubscribe());
         this.subscriptions = [];
-        let playerNotesChildren = this.pointerLayer.getChildren();
+        const playerNotesChildren = this.pointerLayer.getChildren();
 
         for (const token of tokens) {
-            const tokenGroup = playerNotesChildren.find(tokenGroup => tokenGroup.id() == token.id);
+            const tokenGroup = playerNotesChildren.find(tokenGroupEl => tokenGroupEl.id() === token.id);
 
             if (tokenGroup) {
                 this.subscriptions.push(fromEvent(tokenGroup, 'dragend').subscribe(res => {
@@ -308,19 +353,5 @@ export class WhiteBoard {
                 }));
             }
         }
-    }
-
-    protected updateLayer(layer: Konva.Layer, image: string, opacity: number = 1): void {
-        if (opacity === undefined || opacity === null) {
-            opacity = 1;
-        }
-
-        const htmlImage = new Image();
-
-        fromEvent(htmlImage, 'load').pipe(first()).subscribe(_ => {
-            layer.add(new Konva.Image({ image: htmlImage, opacity: opacity }));
-        });
-
-        htmlImage.src = image;
     }
 }

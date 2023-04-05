@@ -11,8 +11,9 @@ import { Drawer } from '../../helpers/drawer';
 })
 export class DrawService {
     public globalCompositeOperation: 'source-over' | 'destination-out' = 'source-over';
+    public strokeEndSubject: Subject<void> = new Subject();
 
-    private eventElement: HasEventTargetAddRemove<MouseEvent> | ArrayLike<HasEventTargetAddRemove<MouseEvent>>;
+    private eventElement: HasEventTargetAddRemove<MouseEvent>;
     private stage: Konva.Stage;
     private layer: Konva.Layer;
     private copySize: Vector2d;
@@ -23,7 +24,6 @@ export class DrawService {
         b: 130
     };
     private strokeWidth = 50;
-    private BUTTON = 0b01;
     private latestPoint: number[];
     private drawing = false;
 
@@ -32,11 +32,15 @@ export class DrawService {
     private mouseoutSubscription: Subscription;
     private mouseenterSubscription: Subscription;
     private mousemoveSubscription: Subscription;
-    public strokeEndSubject: Subject<void> = new Subject();
 
     constructor() { }
 
-    public setCanvas(eventElement: HasEventTargetAddRemove<MouseEvent> | ArrayLike<HasEventTargetAddRemove<MouseEvent>>, stage: Konva.Stage, layer: Konva.Layer, copySize: Vector2d): Subject<void> {
+    public setCanvas(
+        eventElement: HasEventTargetAddRemove<MouseEvent>,
+        stage: Konva.Stage,
+        layer: Konva.Layer,
+        copySize: Vector2d): Subject<void> {
+
         this.eventElement = eventElement;
         this.stage = stage;
         this.layer = layer;
@@ -75,15 +79,15 @@ export class DrawService {
     }
 
     private unsubscribe(): void {
-        if (this.mousedownSubscription) this.mousedownSubscription.unsubscribe();
-        if (this.mouseupSubscription) this.mouseupSubscription.unsubscribe();
-        if (this.mouseoutSubscription) this.mouseoutSubscription.unsubscribe();
-        if (this.mouseenterSubscription) this.mouseenterSubscription.unsubscribe();
-        if (this.mousemoveSubscription) this.mousemoveSubscription.unsubscribe();
+        if (this.mousedownSubscription) {this.mousedownSubscription.unsubscribe();}
+        if (this.mouseupSubscription) {this.mouseupSubscription.unsubscribe();}
+        if (this.mouseoutSubscription) {this.mouseoutSubscription.unsubscribe();}
+        if (this.mouseenterSubscription) {this.mouseenterSubscription.unsubscribe();}
+        if (this.mousemoveSubscription) {this.mousemoveSubscription.unsubscribe();}
     }
 
     private continueStroke(newPoint: number[]) {
-        let stroke: Konva.Path = new Konva.Path({
+        const stroke: Konva.Path = new Konva.Path({
             data: `M${this.latestPoint[0]} ${this.latestPoint[1]} ${newPoint[0]} ${newPoint[1]}`,
             lineCap: 'round',
             stroke: `rgb(${this.colour.r}, ${this.colour.g}, ${this.colour.b})`,
@@ -109,7 +113,7 @@ export class DrawService {
     }
 
     private mouseDown(evt: MouseEvent) {
-        if (evt.button != 0) {
+        if (evt.button !== 0) {
             return;
         }
         if (this.drawing) {
@@ -121,7 +125,8 @@ export class DrawService {
     }
 
     private mouseEnter(evt: MouseEvent) {
-        if (!((this.BUTTON & evt.buttons) === this.BUTTON) || this.drawing) {
+        /*eslint no-bitwise: ["error", { "allow": ["|", "&"] }] */
+        if (!((0b01 & evt.buttons) === 0b01) || this.drawing) {
             return;
         }
         this.mouseDown(evt);
@@ -135,7 +140,13 @@ export class DrawService {
 
         const position = this.stage.getPosition();
         const scale = this.stage.scale() as Vector2d;
-        const rec = { x: position.x, y: position.y, width: this.copySize.x * scale.x, height: this.copySize.y * scale.y, pixelRatio: 1 / scale.x };
+        const rec = {
+            x: position.x,
+            y: position.y,
+            width: this.copySize.x * scale.x,
+            height: this.copySize.y * scale.y,
+            pixelRatio: 1 / scale.x
+        };
 
         from(this.layer.toImage(rec)).subscribe(res => {
             this.layer.destroyChildren();

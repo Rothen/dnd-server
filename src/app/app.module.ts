@@ -14,10 +14,10 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field'
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
 import { MatDialogModule } from '@angular/material/dialog';
-import { UploadDialog } from './upload-dialog/upload-dialog';
+import { UploadDialogComponent } from './upload-dialog/upload-dialog.component';
 import { MatInputModule } from '@angular/material/input';
 import { ControlsComponent } from './controls/controls.component';
 import { MatListModule } from '@angular/material/list';
@@ -33,7 +33,7 @@ import { MatMenuModule } from '@angular/material/menu';
 @NgModule({
     declarations: [
         AppComponent,
-        UploadDialog,
+        UploadDialogComponent,
         ControlsComponent,
         WhiteboardComponent
     ],

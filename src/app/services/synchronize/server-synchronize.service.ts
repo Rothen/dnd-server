@@ -28,6 +28,10 @@ export class ServerSynchronizeService extends Synchronize {
         }
     }
 
+    get isElectron(): boolean {
+        return !!(window && window.process && window.process.type);
+    }
+
     public startSynchronizing(): void {
         this.webSocketServerService.start();
     }
@@ -48,7 +52,7 @@ export class ServerSynchronizeService extends Synchronize {
     public updateScenarioMap(mapName: string, scenarioMap: string): void {
         this.storageService.storeMapFile(mapName, scenarioMap);
         this.webSocketServerService.updateClients({
-            mapName: mapName,
+            mapName,
             update: 'scenario_map',
             value: scenarioMap
         });
@@ -57,7 +61,7 @@ export class ServerSynchronizeService extends Synchronize {
     public updateFogOfWar(mapName: string, fogOfWar: string): void {
         this.storageService.storeFogOfWarFile(mapName, fogOfWar);
         this.webSocketServerService.updateClients({
-            mapName: mapName,
+            mapName,
             update: 'fog_of_war',
             value: fogOfWar
         });
@@ -66,7 +70,7 @@ export class ServerSynchronizeService extends Synchronize {
     public updateMapWithFogOfWar(mapName: string, mapWithFogOfWar: string): void {
         this.storageService.storeMapWithFogOfWarFile(mapName, mapWithFogOfWar);
         this.webSocketServerService.updateClients({
-            mapName: mapName,
+            mapName,
             update: 'map_with_fog_of_war',
             value: mapWithFogOfWar
         });
@@ -75,7 +79,7 @@ export class ServerSynchronizeService extends Synchronize {
     public updateDmNotes(mapName: string, dmNotes: string): void {
         this.storageService.storeDmNotesFile(mapName, dmNotes);
         this.webSocketServerService.updateClients({
-            mapName: mapName,
+            mapName,
             update: 'dm_notes',
             value: dmNotes
         });
@@ -84,7 +88,7 @@ export class ServerSynchronizeService extends Synchronize {
     public updatePlayerNotes(mapName: string, playerNotes: string): void {
         this.storageService.storePlayerNotesFile(mapName, playerNotes);
         this.webSocketServerService.updateClients({
-            mapName: mapName,
+            mapName,
             update: 'player_notes',
             value: playerNotes
         });
@@ -93,13 +97,9 @@ export class ServerSynchronizeService extends Synchronize {
     public updateSettings(mapName: string, mapSettings: MapSettings): void {
         this.storageService.storeSettingsFile(mapName, mapSettings);
         this.webSocketServerService.updateClients({
-            mapName: mapName,
+            mapName,
             update: 'settings',
             value: mapSettings
         });
-    }
-
-    get isElectron(): boolean {
-        return !!(window && window.process && window.process.type);
     }
 }

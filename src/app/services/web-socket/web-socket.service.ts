@@ -24,6 +24,14 @@ export class WebSocketService {
         }
     }
 
+    get isElectron(): boolean {
+        return !!(window && window.process && window.process.type);
+    }
+
+    public updateServer(data: any): void {
+        this.server.send(JSON.stringify(data));
+    }
+
     public start(): void {
         this.discoverServer();
     }
@@ -41,14 +49,14 @@ export class WebSocketService {
     }
 
     private discoverServer(): void {
-        const message = Buffer.from('Server?');
+        const messageBuffer = Buffer.from('Server?');
         this.socket = this.dgram.createSocket('udp4');
 
         this.socket.on('listening', () => {
             this.socket.setBroadcast(true);
-            this.sendDiscovery(this.socket, message);
+            this.sendDiscovery(this.socket, messageBuffer);
             this.discoveryInterval = setInterval(() => {
-                this.sendDiscovery(this.socket, message);
+                this.sendDiscovery(this.socket, messageBuffer);
             }, 5000);
         });
 
@@ -63,8 +71,8 @@ export class WebSocketService {
         this.socket.bind(8888);
     }
 
-    private sendDiscovery(socket: dgram.Socket, message: Buffer): void {
-        socket.send(message, 0, message.length, 5555, '255.255.255.255');
+    private sendDiscovery(socket: dgram.Socket, messageBuffer: Buffer): void {
+        socket.send(messageBuffer, 0, messageBuffer.length, 5555, '255.255.255.255');
     }
 
     private startWebSocket(host: string): void {
@@ -82,13 +90,5 @@ export class WebSocketService {
                 this.onUpdateRecieved.next(JSON.parse(data.toString()));
             }
         });
-    }
-
-    public updateServer(data: any): void {
-        this.server.send(JSON.stringify(data));
-    }
-
-    get isElectron(): boolean {
-        return !!(window && window.process && window.process.type);
     }
 }

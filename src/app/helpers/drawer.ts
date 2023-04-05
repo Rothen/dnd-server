@@ -1,27 +1,27 @@
-import { HasEventTargetAddRemove } from "rxjs/internal/observable/fromEvent";
-import { DrawService } from "../services/draw/draw.service";
-import { Layer } from "konva/lib/Layer";
-import { Vector2d } from "konva/lib/types";
-import { WhiteBoard } from "./white-board";
-import { Observable, forkJoin, from, map } from "rxjs";
-import Konva from "konva";
-import { Synchronize } from "../services/synchronize/synchronize";
+import { HasEventTargetAddRemove } from 'rxjs/internal/observable/fromEvent';
+import { DrawService } from '../services/draw/draw.service';
+import { Layer } from 'konva/lib/Layer';
+import { Vector2d } from 'konva/lib/types';
+import { WhiteBoard } from './white-board';
+import { Observable, forkJoin, from, map } from 'rxjs';
+import Konva from 'konva';
+import { Synchronize } from '../services/synchronize/synchronize';
 
 export abstract class Drawer {
+    protected drawService: DrawService;
+    protected eventElement: HasEventTargetAddRemove<MouseEvent>;
+    protected synchronize: Synchronize;
+    protected whiteBoard: WhiteBoard;
+    protected layer: Layer;
+    protected copySize: Vector2d;
+
     abstract name: string;
     abstract id: string;
     abstract icon: string;
 
-    protected drawService: DrawService;
-    protected eventElement: HasEventTargetAddRemove<MouseEvent> | ArrayLike<HasEventTargetAddRemove<MouseEvent>>
-    protected synchronize: Synchronize;
-    protected whiteBoard: WhiteBoard;
-    protected layer: Layer;
-    protected copySize: Vector2d
-
     constructor(
         drawService: DrawService,
-        eventElement: HasEventTargetAddRemove<MouseEvent> | ArrayLike<HasEventTargetAddRemove<MouseEvent>>,
+        eventElement: HasEventTargetAddRemove<MouseEvent>,
         synchronize: Synchronize,
         whiteBoard: WhiteBoard,
         layer: Layer,
@@ -44,6 +44,7 @@ export abstract class Drawer {
             this.copySize
         ).subscribe(_ => this.done());
     }
+
     abstract done(): void;
 }
 
@@ -51,7 +52,7 @@ export class FogDrawer extends Drawer {
     public name = 'Paint Fog';
     public id = 'paint_fog';
     public icon = 'auto_fix_normal';
-    
+
     public done(): void {
         const observable = this.createMapWithFogOfWarDataURL();
 
@@ -68,7 +69,13 @@ export class FogDrawer extends Drawer {
     private createMapWithFogOfWarDataURL(): Observable<string> {
         const pos = this.whiteBoard.stage.getPosition();
         const scale = this.whiteBoard.stage.scale() as Vector2d;
-        const rec = { x: pos.x, y: pos.y, width: this.whiteBoard.map.settings.width * scale.x, height: this.whiteBoard.map.settings.height * scale.y, pixelRatio: 1 / scale.y };
+        const rec = {
+            x: pos.x,
+            y: pos.y,
+            width: this.whiteBoard.map.settings.width * scale.x,
+            height: this.whiteBoard.map.settings.height * scale.y,
+            pixelRatio: 1 / scale.y
+        };
         const observables = [
             from(this.whiteBoard.backLayer.toImage(rec)),
             from(this.whiteBoard.fogOfWarLayer.toImage(rec))

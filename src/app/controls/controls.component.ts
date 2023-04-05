@@ -28,7 +28,7 @@ export class ControlsComponent {
     @Output() deleteMap = new EventEmitter<Map>();
     @Output() tokensUpdated = new EventEmitter<void>();
 
-    public hideList: boolean = false;
+    public hideList = false;
     public displayedColumns: string[] = ['name', 'type', 'size'];
 
     constructor(private mapServcie: MapService) {}
@@ -58,7 +58,7 @@ export class ControlsComponent {
                 this.selectedMap.settings.tokens.splice(index, 1);
                 this.tokensUpdated.next();
 
-                if (this.selectedToken == token) {
+                if (this.selectedToken === token) {
                     this.setSelectedToken(null);
                 }
             }
@@ -73,7 +73,7 @@ export class ControlsComponent {
     }
 
     public paintModeChanged(): void {
-        
+
     }
 
     public setSelectedMap(map: Map): void {

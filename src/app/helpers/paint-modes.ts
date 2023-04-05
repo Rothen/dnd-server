@@ -1,4 +1,4 @@
-import { MenuItem } from "../interfaces/menu-item";
+import { MenuItem } from '../interfaces/menu-item';
 
 export const PAINT_FOG: MenuItem = {
     name: 'Paint Fog',

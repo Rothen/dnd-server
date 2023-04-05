@@ -53,10 +53,10 @@ export class WhiteboardComponent implements OnInit, OnChanges {
 
     public ngOnChanges(changes: SimpleChanges): void {
         if (this.selectedMap) {
-            if (changes['selectedMap']) {
+            if (changes.selectedMap) {
                 this.loadMap();
             }
-            if (changes['tokens']) {
+            if (changes.tokens) {
                 this.whiteBoard.updateTokens(this.selectedMap.settings.tokens);
             }
         } else {
@@ -64,6 +64,22 @@ export class WhiteboardComponent implements OnInit, OnChanges {
                 this.whiteBoard.reset(true);
             }
         }
+    }
+
+    public loadMap(): void {
+        this.whiteBoard.loadMap(this.selectedMap, this.inDmMode);
+        this.initToolbox();
+    }
+
+    public setSelectedPaintMode(paintMode: Drawer): void {
+        this.selectedPaintMode = paintMode;
+        this.selectedPaintMode.activate();
+        this.drawService.setPaintMode(this.selectedPaintMode);
+    }
+
+    public setSelectedPenSize(penSize: MenuItem): void {
+        this.selectedPenSize = penSize;
+        this.drawService.setPenSize(this.selectedPenSize);
     }
 
     private initLayerVisibility(): void {
@@ -137,21 +153,5 @@ export class WhiteboardComponent implements OnInit, OnChanges {
         this.synchronize.dmNotesUpdateRecieved.subscribe(update => this.whiteBoard.updateDmNotes(update.value));
         this.synchronize.playerNotesUpdateRecieved.subscribe(update => this.whiteBoard.updatePlayerNotes(update.value));
         this.synchronize.settingsUpdateRecieved.subscribe(update => this.whiteBoard.updateSettings(update.value));
-    }
-
-    public loadMap(): void {
-        this.whiteBoard.loadMap(this.selectedMap, this.inDmMode);
-        this.initToolbox();
-    }
-
-    public setSelectedPaintMode(paintMode: Drawer): void {
-        this.selectedPaintMode = paintMode;
-        this.selectedPaintMode.activate();
-        this.drawService.setPaintMode(this.selectedPaintMode);
-    }
-
-    public setSelectedPenSize(penSize: MenuItem): void {
-        this.selectedPenSize = penSize;
-        this.drawService.setPenSize(this.selectedPenSize);
     }
 }
