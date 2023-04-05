@@ -146,12 +146,14 @@ export class WhiteboardComponent implements OnInit, OnChanges {
     }
 
     private initSynchronizeEvents(): void {
-        this.synchronize.mapUpdateRecieved.subscribe(update => this.whiteBoard.loadMap(update.value, this.inDmMode));
-        this.synchronize.scenarioMapUpdateRecieved.subscribe(update => this.whiteBoard.updateScenarioMap(update.value));
-        this.synchronize.fogOfWarUpdateRecieved.subscribe(update => this.whiteBoard.updateFogOfWar(update.value));
-        this.synchronize.mapWithFogOfWarUpdateRecieved.subscribe(update => this.whiteBoard.updateMapWithFogOfWar(update.value));
-        this.synchronize.dmNotesUpdateRecieved.subscribe(update => this.whiteBoard.updateDmNotes(update.value));
-        this.synchronize.playerNotesUpdateRecieved.subscribe(update => this.whiteBoard.updatePlayerNotes(update.value));
-        this.synchronize.settingsUpdateRecieved.subscribe(update => this.whiteBoard.updateSettings(update.value));
+        if (this.synchronize) {
+            this.synchronize.mapUpdateRecieved.subscribe(update => this.whiteBoard.loadMap(update.value, this.inDmMode));
+            this.synchronize.scenarioMapUpdateRecieved.subscribe(update => this.whiteBoard.updateScenarioMap(update.value));
+            this.synchronize.fogOfWarUpdateRecieved.subscribe(update => this.whiteBoard.updateFogOfWar(update.value));
+            this.synchronize.mapWithFogOfWarUpdateRecieved.subscribe(update => this.whiteBoard.updateMapWithFogOfWar(update.value));
+            this.synchronize.dmNotesUpdateRecieved.subscribe(update => this.whiteBoard.updateDmNotes(update.value));
+            this.synchronize.playerNotesUpdateRecieved.subscribe(update => this.whiteBoard.updatePlayerNotes(update.value));
+            this.synchronize.settingsUpdateRecieved.subscribe(update => this.whiteBoard.updateSettings(update.value));
+        }
     }
 }
