@@ -1,6 +1,6 @@
 
-import { Vector2d } from "konva/lib/types"
-import { Token } from "./token";
+import { Vector2d } from 'konva/lib/types';
+import { Token } from './token';
 
 export interface MapSettings {
     id: string;

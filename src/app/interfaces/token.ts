@@ -1,4 +1,4 @@
-import { Vector2d } from "konva/lib/types";
+import { Vector2d } from 'konva/lib/types';
 
 export interface Token {
     id: string;

@@ -1,10 +1,8 @@
-import { ipcRenderer, webFrame } from 'electron';
 import { Injectable } from '@angular/core';
 import * as fs from 'fs';
 import * as path from 'node:path';
 import { APP_CONFIG } from '../../../environments/environment';
 import { Map } from '../../interfaces/map';
-import { Observable, forkJoin, fromEvent, map } from 'rxjs';
 import { MapSettings } from '../../interfaces/map-settings';
 
 @Injectable({
@@ -15,7 +13,6 @@ export class StorageService {
     path: typeof path;
 
     constructor() {
-        // Conditional imports
         if (this.isElectron) {
             this.fs = window.require('fs');
             this.path = window.require('node:path');
@@ -26,11 +23,15 @@ export class StorageService {
         }
     }
 
+    get isElectron(): boolean {
+        return !!(window && window.process && window.process.type);
+    }
+
     public listMaps(): Map[] {
         if (this.isElectron) {
             return this.fs.readdirSync(APP_CONFIG.mapsFolderPath, { withFileTypes: true })
                 .filter(dirent => dirent.isDirectory())
-                .map(dirent => this.loadMap(dirent.name));            
+                .map(dirent => this.loadMap(dirent.name));
         } else {
             return [];
         }
@@ -41,14 +42,14 @@ export class StorageService {
             const mapFolderPath = this.path.join(APP_CONFIG.mapsFolderPath, name);
             if (this.fs.existsSync(mapFolderPath)) {
                 return {
-                    name: name,
+                    name,
                     scenarioMap: this.loadMapFile(mapFolderPath),
                     fogOfWar: this.loadFogOfWarFile(mapFolderPath),
                     mapWithFogOfWar: this.loadMapWithFogOfWarFile(mapFolderPath),
                     dmNotes: this.loadDmNotesFile(mapFolderPath),
                     playerNotes: this.loadPlayerNotesFile(mapFolderPath),
                     settings: this.loadSettingsFile(mapFolderPath)
-                }
+                };
             }
         } else {
             return null;
@@ -56,9 +57,9 @@ export class StorageService {
     }
 
     public deleteMap(map: Map): void {
-        const path = this.path.join(APP_CONFIG.mapsFolderPath, map.name);
-        if (this.fs.existsSync(path)) {
-            this.fs.rmdirSync(path, { recursive: true });
+        const mapPath = this.path.join(APP_CONFIG.mapsFolderPath, map.name);
+        if (this.fs.existsSync(mapPath)) {
+            this.fs.rmdirSync(mapPath, { recursive: true });
         }
     }
 
@@ -134,10 +135,6 @@ export class StorageService {
     }
 
     private writePng(filePath: string, image: string): void {
-        this.fs.writeFileSync(filePath, image.replace(/^data:image\/png;base64,/, ""), { encoding: 'base64' });
-    }
-
-    get isElectron(): boolean {
-        return !!(window && window.process && window.process.type);
+        this.fs.writeFileSync(filePath, image.replace(/^data:image\/png;base64,/, ''), { encoding: 'base64' });
     }
 }

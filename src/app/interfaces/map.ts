@@ -1,4 +1,4 @@
-import { MapSettings } from "./map-settings";
+import { MapSettings } from './map-settings';
 
 export interface Map {
     name: string;
