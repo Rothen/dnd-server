@@ -1,9 +1,15 @@
-<app-whiteboard [selectedMap]="selectedMap" [(selectedToken)]="selectedToken"></app-whiteboard>
+<app-whiteboard
+    [selectedMap]="selectedMap"
+    [(selectedToken)]="selectedToken"
+    (selectedMapChange)="onMapSelectionChange()"
+    (tokensChange)="onMapSelectionChange()">
+</app-whiteboard>
 
 <div class="overlay" [ngStyle]="{'display': (showOverlay) ? 'block' : 'none'}"></div>
 
 <app-controls
     [(selectedMap)]="selectedMap"
+    (selectedMapChange)="onMapSelectionChange()"
     [(paintMode)]="paintMode"
     [maps]="maps"
     (uploadMap)="uploadMap()"
@@ -11,14 +17,3 @@
     (tokensUpdated)="updateTokens()"
     [(selectedToken)]="selectedToken">
 </app-controls>
-
-<!--<div id="mode-selection">
-    <mat-button-toggle-group [(ngModel)]="selectedMode" (change)="onModeSelect()">
-        <mat-button-toggle value="edit_fog">
-            Edit Fog
-        </mat-button-toggle>
-        <mat-button-toggle value="move_tokens">
-            Move Tokens
-        </mat-button-toggle>
-    </mat-button-toggle-group>
-</div>-->

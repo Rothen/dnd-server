@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, ChangeDetectorRef, SimpleChanges } from '@angular/core';
 import { first, fromEvent } from 'rxjs';
 import { StorageService } from './services/storage/storage.service';
 import { Map } from './interfaces/map';
@@ -8,6 +8,7 @@ import { ControlsComponent } from './controls/controls.component';
 import { Token } from './interfaces/token';
 import { WhiteboardComponent } from './whiteboard/whiteboard.component';
 import { MapService } from './services/map/map.service';
+import { WebSocketServerService } from './services/web-socket-server/web-socket-server.service';
 
 @Component({
     selector: 'app-root',
@@ -27,12 +28,24 @@ export class AppComponent {
 
     constructor(
         private storageService: StorageService,
+        private changeDetectorRef: ChangeDetectorRef,
         public dialog: MatDialog,
-        private mapService: MapService
+        private mapService: MapService,
+        private webSocketServer: WebSocketServerService
     ) { }
 
     public ngOnInit() {        
         this.maps = this.storageService.listMaps();
+        this.webSocketServer.clientConnectedSubject.subscribe(client => this.webSocketServer.updateClient(client, this.selectedMap))
+        this.webSocketServer.clientUpdateSubject.subscribe(message => {
+            this.selectedMap = message.map;
+            this.changeDetectorRef.detectChanges();
+            this.storageService.storeMap(this.selectedMap);
+        });
+    }
+
+    public onMapSelectionChange(): void {
+        this.webSocketServer.updateClients(this.selectedMap);
     }
 
     public uploadMap(): void {
@@ -69,5 +82,7 @@ export class AppComponent {
                 isFirstChange: () => false
             }
         });
+
+        this.onMapSelectionChange();
     }
 }

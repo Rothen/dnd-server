@@ -61,6 +61,8 @@ export class WhiteboardComponent implements OnInit, OnChanges {
     @Input() selectedToken: Token;
 
     @Output() selectedTokenChange: EventEmitter<Token> = new EventEmitter();
+    @Output() selectedMapChange: EventEmitter<Map> = new EventEmitter();
+    @Output() tokensChange: EventEmitter<void> = new EventEmitter();
 
     public selectedPaintMode: MenuItem = paintModes[0];
     public selectedPenSize: MenuItem = penSizes[2];
@@ -92,7 +94,10 @@ export class WhiteboardComponent implements OnInit, OnChanges {
             }
             this.selectedToken = null;
             this.selectedTokenChange.next(null);
-        })
+        });
+        this.whiteBoard.tokenMovedSubject.subscribe(token => {
+            this.tokensChange.next()
+        });
     }
 
     public ngOnChanges(changes: SimpleChanges): void {
@@ -105,7 +110,7 @@ export class WhiteboardComponent implements OnInit, OnChanges {
             }
         } else {
             if (this.whiteBoard) {
-                this.whiteBoard.reset();
+                this.whiteBoard.reset(true);
             }
         }
     }
@@ -131,6 +136,7 @@ export class WhiteboardComponent implements OnInit, OnChanges {
             this.selectedMap.playerNotes = this.whiteBoard.getPlayerNotesDataURL();
 
             this.storageService.storeMap(this.selectedMap);
+            this.selectedMapChange.next(this.selectedMap);
             return this.selectedMap;
         });
 

@@ -23,6 +23,8 @@ export class WhiteBoard {
 
     private subscriptions: Subscription[] = [];
 
+    public tokenMovedSubject: Subject<Token> = new Subject();
+
     constructor(containerId: string, storageService: StorageService) {
         this.storageService = storageService;
         Konva.dragButtons = [2];
@@ -31,9 +33,12 @@ export class WhiteBoard {
     }
 
     public loadMap(map: Map) {
-        this.reset();
+        const force = !this.map || this.map.settings.id != map.settings.id;
+        this.reset(force);
         this.map = map;
-        this.stage.absolutePosition({ x: (window.innerWidth - map.settings.width) / 2, y: (window.innerHeight - map.settings.height) / 2 });
+        if (force) {
+            this.stage.absolutePosition({ x: (window.innerWidth - this.map.settings.width) / 2, y: (window.innerHeight - this.map.settings.height) / 2 });
+        }
 
         const mapImage = new Image();
         const fogOfWarImage = new Image();
@@ -124,6 +129,7 @@ export class WhiteBoard {
         this.subscriptions.push(fromEvent(tokenGroup, 'dragend').subscribe(res => {
             token.position = tokenGroup.position();
             this.storageService.storeSettingsFile(this.map.name, this.map.settings);
+            this.tokenMovedSubject.next(token);
         }));
         this.subscriptions.push(fromEvent(tokenGroup, 'click').subscribe(res => {
             this.tokenSelected.next(token);
@@ -131,7 +137,7 @@ export class WhiteBoard {
         this.pointerLayer.add(tokenGroup);
     }
 
-    public reset(): void {
+    public reset(force: boolean): void {
         this.subscriptions.forEach(subscription => subscription.unsubscribe());
         this.subscriptions = [];
         this.backLayer.destroyChildren();
@@ -140,8 +146,11 @@ export class WhiteBoard {
         this.dmNotesLayer.destroyChildren();
         this.playerNotesLayer.destroyChildren();
         this.pointerLayer.destroyChildren();
-        this.stage.scale({ x: 1, y: 1 });
-        this.stage.absolutePosition({ x: 0, y: 0 });
+
+        if (force) {
+            this.stage.scale({ x: 1, y: 1 });
+            this.stage.absolutePosition({ x: 0, y: 0 });
+        }
     }
 
     public initStage(containerId: string): void {
