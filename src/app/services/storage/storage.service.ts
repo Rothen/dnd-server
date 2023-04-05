@@ -2,10 +2,10 @@ import { ipcRenderer, webFrame } from 'electron';
 import { Injectable } from '@angular/core';
 import * as fs from 'fs';
 import * as path from 'node:path';
-import { APP_CONFIG } from '../environments/environment';
-import { Map } from './map';
+import { APP_CONFIG } from '../../../environments/environment';
+import { Map } from '../../interfaces/map';
 import { Observable, forkJoin, fromEvent, map } from 'rxjs';
-import { MapSettings } from './map-settings';
+import { MapSettings } from '../../interfaces/map-settings';
 
 @Injectable({
     providedIn: 'root'

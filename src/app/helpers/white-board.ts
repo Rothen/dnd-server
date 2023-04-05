@@ -1,10 +1,9 @@
 import Konva from "konva";
 import { Vector2d } from "konva/lib/types";
-import { from, forkJoin, Observable, map, fromEvent, Subscription, first, Subject } from "rxjs";
-import { Map } from "./map";
-import { StorageService } from "./storage.service";
-import { Token } from "./token";
-import { EventEmitter } from "@angular/core";
+import { from, forkJoin, Observable, map, fromEvent, Subscription, first, Subject, mergeMap } from "rxjs";
+import { Map } from "../interfaces/map";
+import { StorageService } from "../services/storage/storage.service";
+import { Token } from "../interfaces/token";
 
 export class WhiteBoard {
     public stage: Konva.Stage;
@@ -26,28 +25,9 @@ export class WhiteBoard {
 
     constructor(containerId: string, storageService: StorageService) {
         this.storageService = storageService;
+        Konva.dragButtons = [2];
         this.initStage(containerId);
         this.initLayers();
-    }
-
-    public initMap(map: HTMLImageElement, name: string): Observable<Map> {
-        this.reset();
-        this.stage.absolutePosition({ x: (window.innerWidth - map.naturalWidth) / 2, y: (window.innerHeight - map.naturalHeight) / 2 });
-        this.backLayer.add(new Konva.Image({ image: map }));
-        this.fogOfWarLayer.add(new Konva.Rect({ width: map.naturalWidth, height: map.naturalHeight, fill: '#828282' }));
-        this.mapLayer.add(new Konva.Image({ image: map, opacity: 0.4 }));
-
-        this.map = {
-            name: name,
-            scenarioMap: this.backLayer.toDataURL({x: 0, y: 0, width: map.naturalWidth, height: map.naturalHeight}),
-            settings: {
-                width: map.naturalWidth,
-                height: map.naturalHeight,
-                tokens: []
-            }
-        } as any
-
-        return this.store();
     }
 
     public loadMap(map: Map) {
@@ -74,9 +54,7 @@ export class WhiteBoard {
             this.playerNotesLayer.add(new Konva.Image({ image: playerNotesImage }));
         });
 
-        this.map.settings.tokens.forEach(token => {
-            this.generateToken(token);
-        });
+        this.updateTokens();
 
         mapImage.src = map.scenarioMap;
         fogOfWarImage.src = map.fogOfWar;
@@ -85,20 +63,17 @@ export class WhiteBoard {
     }
 
     public updateTokens(): void {
-        if (this.map && this.map.settings.tokens) {
-            this.pointerLayer.destroyChildren();
-            this.subscriptions.forEach(subscription => subscription.unsubscribe());
-            this.subscriptions = [];
-            this.map.settings.tokens.forEach(token => {
-                this.generateToken(token);
-            });
-            this.store().subscribe();
-        }
+        this.pointerLayer.destroyChildren();
+        this.subscriptions.forEach(subscription => subscription.unsubscribe());
+        this.subscriptions = [];
+        this.map.settings.tokens.forEach(token => {
+            this.drawToken(token);
+        });
     }
 
-    private generateToken(token: Token): void {
-        const scale: Vector2d = { x: 0.5, y: 0.5 };
-        const size = { width: 100, height: 100 };
+    private drawToken(token: Token): void {
+        const scale: Vector2d = { x: 1, y: 1 };
+        const size = { width: this.map.settings.pixelPerUnit, height: this.map.settings.pixelPerUnit };
         let fontSize = 50;
 
         switch (token.size) {
@@ -134,7 +109,7 @@ export class WhiteBoard {
                 break;
         }
 
-        const tokenGroup = new Konva.Group({ width: size.width, height: size.height, listening: true, draggable: true, x: token.position.x, y: token.position.y, scale: scale });
+        const tokenGroup = new Konva.Group({ width: size.width, height: size.height, listening: true, draggable: true, x: token.position.x, y: token.position.y, scale: scale, id: token.id });
         let color = 'green';
         
         if (token.type === 'npc') {
@@ -177,13 +152,14 @@ export class WhiteBoard {
             height: height,
             container: containerId
         });
-        Konva.dragButtons = [2];
 
         this.stage.draggable(true);
 
         this.stage.on('dragend', (e) => {
             const position = e.currentTarget.position();
         });
+
+        window.addEventListener('resize', event => this.stage.size({ width: window.innerWidth, height: window.innerHeight }))
 
         const scaleBy = 1.1;
         this.stage.on('wheel', (e) => {
@@ -240,19 +216,6 @@ export class WhiteBoard {
         this.playerNotesLayer.draw();
         this.pointerLayer.draw();
     }
-    
-    public store(): Observable<Map> {
-        return this.getMapWithFogOfWarDataURL().pipe(map(mapWithFogOfWar => {
-            this.map.scenarioMap = this.getScenarioMapDataURL();
-            this.map.fogOfWar = this.getFogOfWarDataURL();
-            this.map.mapWithFogOfWar = mapWithFogOfWar;
-            this.map.dmNotes = this.getDmNotesDataURL();
-            this.map.playerNotes = this.getPlayerNotesDataURL();
-
-            this.storageService.storeMap(this.map);
-            return this.map;
-        }));
-    }
 
     public getScenarioMapDataURL(): string {
         const pos = this.stage.getPosition();
@@ -266,25 +229,6 @@ export class WhiteBoard {
         const scale = this.stage.scale() as Vector2d;
         const rec = { x: pos.x, y: pos.y, width: this.map.settings.width * scale.x, height: this.map.settings.height * scale.y, pixelRatio: 1 / scale.y };
         return this.fogOfWarLayer.toDataURL(rec);
-    }
-
-    public getMapWithFogOfWarDataURL(): Observable<string> {
-        const pos = this.stage.getPosition();
-        const scale = this.stage.scale() as Vector2d;
-        const rec = { x: pos.x, y: pos.y, width: this.map.settings.width * scale.x, height: this.map.settings.height * scale.y, pixelRatio: 1 / scale.y };
-        const observables = [
-            from(this.backLayer.toImage(rec)),
-            from(this.fogOfWarLayer.toImage(rec))
-        ];
-
-        return forkJoin(observables).pipe(map(res => {
-            const layer = new Konva.Layer();
-
-            layer.add(new Konva.Image({ image: res[0] as any }));
-            layer.add(new Konva.Image({ image: res[1] as any }));
-
-            return layer.toDataURL();
-        }));
     }
 
     public getDmNotesDataURL(): string {

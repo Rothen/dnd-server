@@ -4,9 +4,11 @@ import { MatDialogRef } from '@angular/material/dialog';
 @Component({
     selector: 'app-upload-dialog',
     templateUrl: 'upload-dialog.html',
+    styleUrls: ['./upload-dialog.scss']
 })
 export class UploadDialog {
     public mapName: string;
+    public pixelPerUnit: number;
     private file: any;
     private fileBuffer: ArrayBuffer;
 
@@ -28,14 +30,15 @@ export class UploadDialog {
     }
 
     public closeDialog() {
-        if (this.mapName == null || this.mapName.length == 0 || this.file == null) {
+        if (this.mapName == null || this.mapName.length == 0 || this.file == null || this.pixelPerUnit == null) {
             return;
         }
         
         this.dialogRef.close({
             name: this.mapName,
             map: this.file,
-            mapBuffer: this.fileBuffer
+            mapBuffer: this.fileBuffer,
+            pixelPerUnit: this.pixelPerUnit
         });
     }
 }

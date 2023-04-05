@@ -5,9 +5,6 @@ import { HttpClientModule, HttpClient } from '@angular/common/http';
 import { CoreModule } from './core/core.module';
 import { SharedModule } from './shared/shared.module';
 
-import { AppRoutingModule } from './app-routing.module';
-
-import { HomeModule } from './home/home.module';
 import { DetailModule } from './detail/detail.module';
 
 import { AppComponent } from './app.component';
@@ -28,12 +25,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatTableModule } from '@angular/material/table';
+import { WhiteboardComponent } from './whiteboard/whiteboard.component';
 
 @NgModule({
     declarations: [
         AppComponent,
         UploadDialog,
-        ControlsComponent
+        ControlsComponent,
+        WhiteboardComponent
     ],
     imports: [
         BrowserModule,
@@ -41,9 +40,7 @@ import { MatTableModule } from '@angular/material/table';
         HttpClientModule,
         CoreModule,
         SharedModule,
-        HomeModule,
         DetailModule,
-        AppRoutingModule,
         BrowserAnimationsModule,
         MatSelectModule,
         DragDropModule,

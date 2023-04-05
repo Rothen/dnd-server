@@ -1,21 +1,15 @@
-<div style="width: 100vh; height: 100vw; " id='canvas' tabindex="0"
-    (mousedown)="selectedMode == 'edit_fog' ? mouseDown($event) : null" (mouseup)="selectedMode == 'edit_fog' ? endStroke($event) : null"
-    (mouseout)="selectedMode == 'edit_fog' ? endStroke($event) : null" (mouseenter)="selectedMode == 'edit_fog' ? mouseEnter($event) : null"
-    (mousemove)="selectedMode == 'edit_fog' ? mouseMove($event) : null"></div>
+<app-whiteboard [selectedMap]="selectedMap" [(selectedToken)]="selectedToken"></app-whiteboard>
 
-<div class="overlay" [ngStyle]="{'display': (showOverlay) ? 'block' : 'none'}">
-</div>
+<div class="overlay" [ngStyle]="{'display': (showOverlay) ? 'block' : 'none'}"></div>
 
 <app-controls
-    [(map)]="selectedMap"
+    [(selectedMap)]="selectedMap"
     [(paintMode)]="paintMode"
-    (mapChange)="loadMap()"
     [maps]="maps"
-    [mode]="selectedMode"
     (uploadMap)="uploadMap()"
     (deleteMap)="deleteMap($event)"
-    (tokenAdded)="whiteBoard.updateTokens()"
-    (token)="selectedToken">
+    (tokensUpdated)="updateTokens()"
+    [(selectedToken)]="selectedToken">
 </app-controls>
 
 <!--<div id="mode-selection">

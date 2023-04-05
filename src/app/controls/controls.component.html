@@ -2,14 +2,14 @@
     <div id="map-list" class="part">
         <div class="header">
             <h1>Maps</h1>
-            <button *ngIf="map != null" style="float: right;" mat-icon-button (click)="hideList = true">
+            <button *ngIf="selectedMap != null" style="float: right;" mat-icon-button (click)="hideList = true">
                 <mat-icon>chevron_right</mat-icon>
             </button>
         </div>
         <button mat-raised-button color="primary" (click)="uploadMap.next()">Upload Map</button>
 
         <mat-selection-list *ngIf="maps != null" [multiple]="false" (selectionChange)="onMapChange($event)">
-            <mat-list-option *ngFor="let mapObj of maps" [value]="mapObj" [selected]="mapObj == map">
+            <mat-list-option *ngFor="let mapObj of maps" [value]="mapObj" [selected]="mapObj == selectedMap">
                 {{mapObj.name}}
             </mat-list-option>
         </mat-selection-list>
@@ -17,27 +17,27 @@
 
     <div id="controls-panel" class="part">
         <div class="header">
-            <h1>{{map?.name}}</h1>
-            <button *ngIf="map != null" style="float: left;" mat-icon-button (click)="hideList = false">
+            <h1>{{selectedMap?.name}}</h1>
+            <button *ngIf="selectedMap != null" style="float: left;" mat-icon-button (click)="hideList = false">
                 <mat-icon>chevron_left</mat-icon>
             </button>
         </div>
         
-        <h2>Fog</h2>
+        <!--<h2>Fog</h2>
         <mat-radio-group aria-label="Select an option" [(ngModel)]="paintMode" (change)="paintModeChange.next(paintMode)">
             <mat-radio-button value="paint">Paint</mat-radio-button>
             <mat-radio-button value="erase">Erase</mat-radio-button>
-        </mat-radio-group>
+        </mat-radio-group>-->
 
         <div class="header">
             <h2>Tokens</h2>
-            <button *ngIf="map != null" style="float: right;" mat-icon-button (click)="addToken()">
+            <button *ngIf="selectedMap != null" style="float: right;" mat-icon-button (click)="addToken()">
                 <mat-icon>add</mat-icon>
             </button>
         </div>
         <!--<section class="example-container mat-elevation-z8" tabindex="0">-->
         <section class="example-container" tabindex="0">
-            <table *ngIf="map" mat-table [dataSource]="map.settings.tokens" class="token-table">
+            <table *ngIf="selectedMap" mat-table [dataSource]="selectedMap.settings.tokens" class="token-table">
                 <!-- Position Column -->
                 <ng-container matColumnDef="name">
                     <th mat-header-cell *matHeaderCellDef> Name </th>
@@ -63,25 +63,31 @@
                         <button mat-icon-button color="warn" (click)="deleteToken(token)">
                             <mat-icon>delete</mat-icon>
                         </button>
+                        <button *ngIf="!token.hide" mat-icon-button (click)="token.hide = true;tokensUpdated.next()">
+                            <mat-icon>visibility</mat-icon>
+                        </button>
+                        <button *ngIf="token.hide" mat-icon-button (click)="token.hide = false;tokensUpdated.next()">
+                            <mat-icon>visibility_off</mat-icon>
+                        </button>
                     </td>
                 </ng-container>
             
                 <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
                 <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-                    (click)="token = row"
-                    [class.row-is-selected]="token == row"></tr>
+                    (click)="selectedToken = row; selectedTokenChange.next(row);"
+                    [class.row-is-selected]="selectedToken == row"></tr>
             </table>
         </section>
 
-        <div *ngIf="token != null; else noToken">
+        <div *ngIf="selectedToken != null; else noToken">
             <mat-form-field appearance="fill" class="third-width">
                 <mat-label>Name</mat-label>
-                <input matInput [(ngModel)]="token.name" (change)="tokenAdded.next()">
+                <input matInput [(ngModel)]="selectedToken.name" (change)="tokensUpdated.next()">
             </mat-form-field>
 
             <mat-form-field appearance="fill" class="third-width">
                 <mat-label>Type</mat-label>
-                <mat-select [(ngModel)]="token.type" (selectionChange)="tokenAdded.next()">
+                <mat-select [(ngModel)]="selectedToken.type" (selectionChange)="tokensUpdated.next()">
                     <mat-option value="player">Player</mat-option>
                     <mat-option value="enemy">Enemy</mat-option>
                     <mat-option value="npc">NPC</mat-option>
@@ -90,7 +96,7 @@
 
             <mat-form-field appearance="fill" class="third-width">
                 <mat-label>Size</mat-label>
-                <mat-select [(ngModel)]="token.size" (selectionChange)="tokenAdded.next()">
+                <mat-select [(ngModel)]="selectedToken.size" (selectionChange)="tokensUpdated.next()">
                     <mat-option value="tiny">Tiny</mat-option>
                     <mat-option value="small">Small</mat-option>
                     <mat-option value="medium">Medium</mat-option>
@@ -99,11 +105,21 @@
                     <mat-option value="gargantuan">Gargantuan</mat-option>
                 </mat-select>
             </mat-form-field>
+
+            <mat-form-field appearance="fill" class="third-width">
+                <mat-label>Health</mat-label>
+                <input matInput type="number" [(ngModel)]="selectedToken.health" (change)="tokensUpdated.next()">
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="third-width">
+                <mat-label>Max Helath</mat-label>
+                <input matInput type="number" [(ngModel)]="selectedToken.maxHealth" (change)="tokensUpdated.next()">
+            </mat-form-field>
         </div>
 
         <ng-template #noToken>
             <div>
-                No Selected Token {{token?.name}}
+                No Selected Token {{selectedToken?.name}}
             </div>
         </ng-template>        
 
