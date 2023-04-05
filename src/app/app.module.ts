@@ -26,6 +26,9 @@ import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatTableModule } from '@angular/material/table';
 import { WhiteboardComponent } from './whiteboard/whiteboard.component';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatMenuModule } from '@angular/material/menu';
 
 @NgModule({
     declarations: [
@@ -54,7 +57,10 @@ import { WhiteboardComponent } from './whiteboard/whiteboard.component';
         MatIconModule,
         MatButtonToggleModule,
         MatRadioModule,
-        MatTableModule
+        MatTableModule,
+        MatTooltipModule,
+        MatToolbarModule,
+        MatMenuModule
     ],
     providers: [
         { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: false } }

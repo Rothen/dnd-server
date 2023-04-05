@@ -1,6 +1,6 @@
 import Konva from "konva";
 import { Vector2d } from "konva/lib/types";
-import { from, forkJoin, Observable, map, fromEvent, Subscription, first, Subject, mergeMap } from "rxjs";
+import { fromEvent, Subscription, first, Subject } from "rxjs";
 import { Map } from "../interfaces/map";
 import { StorageService } from "../services/storage/storage.service";
 import { Token } from "../interfaces/token";
@@ -74,7 +74,8 @@ export class WhiteBoard {
     private drawToken(token: Token): void {
         const scale: Vector2d = { x: 1, y: 1 };
         const size = { width: this.map.settings.pixelPerUnit, height: this.map.settings.pixelPerUnit };
-        let fontSize = 50;
+        let fontSize = this.map.settings.pixelPerUnit*0.7;
+        const opacity = (token.hide) ? 0.7 : 1;
 
         switch (token.size) {
             case 'tiny':
@@ -109,7 +110,7 @@ export class WhiteBoard {
                 break;
         }
 
-        const tokenGroup = new Konva.Group({ width: size.width, height: size.height, listening: true, draggable: true, x: token.position.x, y: token.position.y, scale: scale, id: token.id });
+        const tokenGroup = new Konva.Group({ width: size.width, height: size.height, listening: true, draggable: true, x: token.position.x, y: token.position.y, scale: scale, id: token.id, opacity: opacity });
         let color = 'green';
         
         if (token.type === 'npc') {

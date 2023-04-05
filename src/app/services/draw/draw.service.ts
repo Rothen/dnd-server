@@ -3,6 +3,7 @@ import { Subject, Subscription, from, fromEvent } from 'rxjs';
 import Konva from 'konva';
 import { Vector2d } from 'konva/lib/types';
 import { HasEventTargetAddRemove } from 'rxjs/internal/observable/fromEvent';
+import { MenuItem } from '../../interfaces/menu-item';
 
 @Injectable({
     providedIn: 'root'
@@ -51,8 +52,25 @@ export class DrawService {
         return this.strokeEndSubject;
     }
 
-    public setPainMode(paintMode: 'paint' | 'erase'): void {
-        this.globalCompositeOperation = (paintMode === 'paint') ? 'source-over' : 'destination-out';
+    public setPaintMode(paintMode: MenuItem): void {
+        this.globalCompositeOperation = (paintMode.id === 'paint_fog') ? 'source-over' : 'destination-out';
+    }
+
+    public setPenSize(penSize: MenuItem): void {
+        switch (penSize.id) {
+            case 'small':
+                this.strokeWidth = 5;
+                break;
+            case 'medium':
+                this.strokeWidth = 25;
+                break;
+            case 'large':
+                this.strokeWidth = 50;
+                break;
+            case 'huge':
+                this.strokeWidth = 100;
+                break;
+        }
     }
 
     private unsubscribe(): void {
@@ -96,7 +114,6 @@ export class DrawService {
         if (this.drawing) {
             return;
         }
-        console.log('here');
         evt.preventDefault();
         const pointer = this.stage.getRelativePointerPosition();
         this.startStroke([pointer.x, pointer.y]);

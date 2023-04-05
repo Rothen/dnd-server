@@ -3,10 +3,51 @@ import { WhiteBoard } from '../helpers/white-board';
 import { StorageService } from '../services/storage/storage.service';
 import { Map } from '../interfaces/map';
 import { DrawService } from '../services/draw/draw.service';
-import { map, Observable, from, forkJoin } from 'rxjs';
+import { map, Observable, from, forkJoin, fromEvent } from 'rxjs';
 import { Vector2d } from 'konva/lib/types';
 import Konva from 'konva';
 import { Token } from '../interfaces/token';
+import { MenuItem } from '../interfaces/menu-item';
+
+export const paintModes: MenuItem[] = [{
+    name: 'Paint Fog',
+    id: 'paint_fog',
+    icon: 'auto_fix_normal'
+}, {
+    name: 'Erase Fog',
+    id: 'erase_fog',
+    icon: 'auto_fix_off'
+}, {
+    name: 'Draw',
+    id: 'paint_fog',
+    icon: 'draw'
+}, {
+    name: 'Erase',
+    id: 'paint_fog',
+    icon: 'highlighter_size_4',
+    iconClass: 'material-symbols-outlined'
+}];
+export const penSizes: MenuItem[] = [{
+    name: 'Small',
+    id: 'small',
+    icon: 'pen_size_1',
+    iconClass: 'material-symbols-outlined'
+}, {
+    name: 'Medium',
+    id: 'medium',
+    icon: 'pen_size_2',
+    iconClass: 'material-symbols-outlined'
+}, {
+    name: 'Large',
+    id: 'large',
+    icon: 'pen_size_3',
+    iconClass: 'material-symbols-outlined'
+}, {
+    name: 'Huge',
+    id: 'huge',
+    icon: 'pen_size_4',
+    iconClass: 'material-symbols-outlined'
+}];
 
 @Component({
   selector: 'app-whiteboard',
@@ -21,9 +62,14 @@ export class WhiteboardComponent implements OnInit, OnChanges {
 
     @Output() selectedTokenChange: EventEmitter<Token> = new EventEmitter();
 
-    public paintMode: 'paint' | 'erase' = 'paint';
+    public selectedPaintMode: MenuItem = paintModes[0];
+    public selectedPenSize: MenuItem = penSizes[2];
+
+    public paintModes = paintModes;
+    public penSizes = penSizes;
 
     private whiteBoard: WhiteBoard;
+    private lastTokenSelection: Date;
 
     constructor(
         private storageService: StorageService,
@@ -35,7 +81,18 @@ export class WhiteboardComponent implements OnInit, OnChanges {
         this.whiteBoard.tokenSelected.subscribe(token => {
             this.selectedToken = token;
             this.selectedTokenChange.next(this.selectedToken);
+            this.lastTokenSelection = new Date();
         });
+        fromEvent(this.whiteBoard.stage, 'click').subscribe((event) => {
+            if (this.lastTokenSelection) {
+                const delta = new Date().getTime() - this.lastTokenSelection.getTime();
+                if (delta <= 10) {
+                    return;
+                }
+            }
+            this.selectedToken = null;
+            this.selectedTokenChange.next(null);
+        })
     }
 
     public ngOnChanges(changes: SimpleChanges): void {
@@ -99,7 +156,13 @@ export class WhiteboardComponent implements OnInit, OnChanges {
         }));
     }
 
-    public paintModeChanged(): void {
-        this.drawService.setPainMode(this.paintMode);
+    public setSelectedPaintMode(paintMode: MenuItem): void {
+        this.selectedPaintMode = paintMode;
+        this.drawService.setPaintMode(this.selectedPaintMode);
+    }
+
+    public setSelectedPenSize(penSize: MenuItem): void {
+        this.selectedPenSize = penSize;
+        this.drawService.setPenSize(this.selectedPenSize);
     }
 }

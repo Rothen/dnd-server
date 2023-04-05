@@ -1,130 +1,106 @@
-<div id="control-container" [ngClass]="{'hide-list': hideList}">
-    <div id="map-list" class="part">
-        <div class="header">
-            <h1>Maps</h1>
-            <button *ngIf="selectedMap != null" style="float: right;" mat-icon-button (click)="hideList = true">
-                <mat-icon>chevron_right</mat-icon>
+<mat-toolbar color="primary" class="mat-elevation-z8" style="z-index: 110; position: fixed; top: 0; left: 0;">
+    <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Example icon-button with a menu" matTooltip="Maps">
+        <mat-icon>menu</mat-icon>
+    </button>
+    <mat-menu #menu="matMenu">
+        <button *ngFor="let map of maps" mat-menu-item (click)="setSelectedMap(map)">
+            <mat-icon>map</mat-icon>
+            <span>{{map.name}}</span>
+        </button>
+        <button mat-menu-item (click)="uploadMap.next()">
+            <mat-icon>add</mat-icon>
+            <span>New</span>
+        </button>
+    </mat-menu>
+
+    <h1 style="margin: 0;">D&D DM Map</h1><span style="width: 50px;"></span>
+    <h2 style="margin: 0;" *ngIf="selectedMap">{{selectedMap.name}}</h2>
+    
+    <span class="example-spacer"></span>
+
+    <button mat-icon-button class="example-icon favorite-icon" aria-label="Example icon-button with heart icon">
+        <mat-icon>favorite</mat-icon>
+    </button>
+    <button mat-icon-button class="example-icon" aria-label="Example icon-button with share icon">
+        <mat-icon>share</mat-icon>
+    </button>
+</mat-toolbar>
+
+<button *ngIf="selectedMap" mat-fab color="primary" [matMenuTriggerFor]="addItemMenu" matTooltip="add" style="position: fixed; right: 10px; bottom: 10px;">
+    <mat-icon>add</mat-icon>
+</button>
+<mat-menu #addItemMenu="matMenu">
+    <button mat-menu-item (click)="addToken('player')">
+        <mat-icon>mood</mat-icon>
+        <span>Player</span>
+    </button>
+    <button mat-menu-item (click)="addToken('npc')">
+        <mat-icon>sentiment_satisfied</mat-icon>
+        <span>NPC</span>
+    </button>
+    <button mat-menu-item (click)="addToken('enemy')">
+        <mat-icon>sentiment_dissatisfied</mat-icon>
+        <span>Enemy</span>
+    </button>
+</mat-menu>
+
+<mat-card *ngIf="selectedToken" style="position: fixed; left: 10px; bottom: 10px; width: 400px;">
+    <mat-card-header>
+        <mat-card-title style="color: white; height: 48px; width: 100%; display: flex; justify-content: space-between; align-items: center;">
+            <span>{{selectedToken.name}}</span>
+            <button *ngIf="!selectedToken.hide" mat-icon-button matTooltip="Hide" (click)="selectedToken.hide = true;tokensUpdated.next()">
+                <mat-icon>visibility</mat-icon>
             </button>
-        </div>
-        <button mat-raised-button color="primary" (click)="uploadMap.next()">Upload Map</button>
-
-        <mat-selection-list *ngIf="maps != null" [multiple]="false" (selectionChange)="onMapChange($event)">
-            <mat-list-option *ngFor="let mapObj of maps" [value]="mapObj" [selected]="mapObj == selectedMap">
-                {{mapObj.name}}
-            </mat-list-option>
-        </mat-selection-list>
-    </div>
-
-    <div id="controls-panel" class="part">
-        <div class="header">
-            <h1>{{selectedMap?.name}}</h1>
-            <button *ngIf="selectedMap != null" style="float: left;" mat-icon-button (click)="hideList = false">
-                <mat-icon>chevron_left</mat-icon>
+            <button *ngIf="selectedToken.hide" mat-icon-button matTooltip="Show" (click)="selectedToken.hide = false;tokensUpdated.next()">
+                <mat-icon>visibility_off</mat-icon>
             </button>
-        </div>
-        
-        <!--<h2>Fog</h2>
-        <mat-radio-group aria-label="Select an option" [(ngModel)]="paintMode" (change)="paintModeChange.next(paintMode)">
-            <mat-radio-button value="paint">Paint</mat-radio-button>
-            <mat-radio-button value="erase">Erase</mat-radio-button>
-        </mat-radio-group>-->
-
-        <div class="header">
-            <h2>Tokens</h2>
-            <button *ngIf="selectedMap != null" style="float: right;" mat-icon-button (click)="addToken()">
-                <mat-icon>add</mat-icon>
-            </button>
-        </div>
-        <!--<section class="example-container mat-elevation-z8" tabindex="0">-->
-        <section class="example-container" tabindex="0">
-            <table *ngIf="selectedMap" mat-table [dataSource]="selectedMap.settings.tokens" class="token-table">
-                <!-- Position Column -->
-                <ng-container matColumnDef="name">
-                    <th mat-header-cell *matHeaderCellDef> Name </th>
-                    <td mat-cell *matCellDef="let token"> {{token.name}} </td>
-                </ng-container>
-            
-                <!-- Name Column -->
-                <ng-container matColumnDef="type">
-                    <th mat-header-cell *matHeaderCellDef> Type </th>
-                    <td mat-cell *matCellDef="let token"> {{token.type}} </td>
-                </ng-container>
-            
-                <!-- Weight Column -->
-                <ng-container matColumnDef="size">
-                    <th mat-header-cell *matHeaderCellDef> Size </th>
-                    <td mat-cell *matCellDef="let token"> {{token.size}} </td>
-                </ng-container>
-            
-                <!-- Weight Column -->
-                <ng-container matColumnDef="actions">
-                    <th mat-header-cell *matHeaderCellDef> </th>
-                    <td mat-cell *matCellDef="let token">
-                        <button mat-icon-button color="warn" (click)="deleteToken(token)">
-                            <mat-icon>delete</mat-icon>
-                        </button>
-                        <button *ngIf="!token.hide" mat-icon-button (click)="token.hide = true;tokensUpdated.next()">
-                            <mat-icon>visibility</mat-icon>
-                        </button>
-                        <button *ngIf="token.hide" mat-icon-button (click)="token.hide = false;tokensUpdated.next()">
-                            <mat-icon>visibility_off</mat-icon>
-                        </button>
-                    </td>
-                </ng-container>
-            
-                <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-                <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-                    (click)="selectedToken = row; selectedTokenChange.next(row);"
-                    [class.row-is-selected]="selectedToken == row"></tr>
-            </table>
-        </section>
-
-        <div *ngIf="selectedToken != null; else noToken">
-            <mat-form-field appearance="fill" class="third-width">
-                <mat-label>Name</mat-label>
-                <input matInput [(ngModel)]="selectedToken.name" (change)="tokensUpdated.next()">
-            </mat-form-field>
-
-            <mat-form-field appearance="fill" class="third-width">
-                <mat-label>Type</mat-label>
-                <mat-select [(ngModel)]="selectedToken.type" (selectionChange)="tokensUpdated.next()">
-                    <mat-option value="player">Player</mat-option>
-                    <mat-option value="enemy">Enemy</mat-option>
-                    <mat-option value="npc">NPC</mat-option>
-                </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="fill" class="third-width">
-                <mat-label>Size</mat-label>
-                <mat-select [(ngModel)]="selectedToken.size" (selectionChange)="tokensUpdated.next()">
-                    <mat-option value="tiny">Tiny</mat-option>
-                    <mat-option value="small">Small</mat-option>
-                    <mat-option value="medium">Medium</mat-option>
-                    <mat-option value="large">Large</mat-option>
-                    <mat-option value="huge">Huge</mat-option>
-                    <mat-option value="gargantuan">Gargantuan</mat-option>
-                </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="fill" class="third-width">
-                <mat-label>Health</mat-label>
-                <input matInput type="number" [(ngModel)]="selectedToken.health" (change)="tokensUpdated.next()">
-            </mat-form-field>
-
-            <mat-form-field appearance="fill" class="third-width">
-                <mat-label>Max Helath</mat-label>
-                <input matInput type="number" [(ngModel)]="selectedToken.maxHealth" (change)="tokensUpdated.next()">
-            </mat-form-field>
-        </div>
-
-        <ng-template #noToken>
-            <div>
-                No Selected Token {{selectedToken?.name}}
-            </div>
-        </ng-template>        
-
-        <div class="footer">
-            <button mat-raised-button color="warn" (click)="deleteMapClick()">Delete</button>
-        </div>
-    </div>
-</div>
+        </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+        <mat-form-field class="third-width">
+            <mat-label>Name</mat-label>
+            <input matInput [(ngModel)]="selectedToken.name" (change)="tokensUpdated.next()">
+        </mat-form-field>
+    
+        <mat-form-field class="third-width">
+            <mat-label>Type</mat-label>
+            <mat-select [(ngModel)]="selectedToken.type" (selectionChange)="tokensUpdated.next()">
+                <mat-option value="player">Player</mat-option>
+                <mat-option value="enemy">Enemy</mat-option>
+                <mat-option value="npc">NPC</mat-option>
+            </mat-select>
+        </mat-form-field>
+    
+        <mat-form-field class="third-width">
+            <mat-label>Size</mat-label>
+            <mat-select [(ngModel)]="selectedToken.size" (selectionChange)="tokensUpdated.next()">
+                <mat-option value="tiny">Tiny</mat-option>
+                <mat-option value="small">Small</mat-option>
+                <mat-option value="medium">Medium</mat-option>
+                <mat-option value="large">Large</mat-option>
+                <mat-option value="huge">Huge</mat-option>
+                <mat-option value="gargantuan">Gargantuan</mat-option>
+            </mat-select>
+        </mat-form-field>
+    
+        <table class="full-width" cellspacing="0">
+            <tr>
+                <td style="width: 50%;">
+                    <mat-form-field style="width: 175px;">
+                        <mat-label>Health</mat-label>
+                        <input matInput type="number" [(ngModel)]="selectedToken.health" (change)="tokensUpdated.next()">
+                    </mat-form-field>
+                </td>
+                <td style="width: 50%;">
+                    <mat-form-field style="width: 175px;">
+                        <mat-label>Max Helath</mat-label>
+                        <input matInput type="number" [(ngModel)]="selectedToken.maxHealth" (change)="tokensUpdated.next()">
+                    </mat-form-field>
+                </td>
+            </tr>
+        </table>
+    </mat-card-content>
+    <mat-card-actions align="end">
+        <button mat-button color="warn" (click)="deleteToken(selectedToken)">Remove</button>
+    </mat-card-actions>
+</mat-card>

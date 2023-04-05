@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { Map } from '../interfaces/map';
 import { MatSelectionListChange } from '@angular/material/list';
 import { Token } from '../interfaces/token';
@@ -27,27 +27,24 @@ export class ControlsComponent {
     @Output() tokensUpdated = new EventEmitter<void>();
 
     public hideList: boolean = false;
-    public displayedColumns: string[] = ['name', 'type', 'size', 'actions'];
+    public displayedColumns: string[] = ['name', 'type', 'size'];
 
     constructor(private mapServcie: MapService) {}
 
     public onMapChange(event: MatSelectionListChange): void {
-        this.selectedToken = null;
-        this.selectedTokenChange.next(null);
+        this.setSelectedToken(null);
         this.selectedMap = event.options[0].value;
         this.selectedMapChange.next(this.selectedMap);
         this.hideList = true;
     }
 
-    public addToken(): void {
+    public addToken(type: 'player' | 'npc' | 'enemy'): void {
         if (this.selectedMap) {
-            const token = this.mapServcie.addToken(this.selectedMap);
+            const token = this.mapServcie.addToken(this.selectedMap, type);
 
-            this.tokensTable.renderRows()
             this.tokensUpdated.next();
 
-            this.selectedToken = token;
-            this.selectedTokenChange.next(this.selectedToken);
+            this.setSelectedToken(token);
         }
     }
 
@@ -57,8 +54,11 @@ export class ControlsComponent {
 
             if (index >= 0) {
                 this.selectedMap.settings.tokens.splice(index, 1);
-                this.tokensTable.renderRows();
                 this.tokensUpdated.next();
+
+                if (this.selectedToken == token) {
+                    this.setSelectedToken(null);
+                }
             }
         }
     }
@@ -68,5 +68,19 @@ export class ControlsComponent {
             this.hideList = false;
             this.deleteMap.next(this.selectedMap);
         }
+    }
+
+    public paintModeChanged(): void {
+        
+    }
+
+    public setSelectedMap(map: Map): void {
+        this.selectedMap = map;
+        this.selectedMapChange.next(this.selectedMap);
+    }
+
+    public setSelectedToken(token: Token): void {
+        this.selectedToken = token;
+        this.selectedTokenChange.next(this.selectedToken);
     }
 }

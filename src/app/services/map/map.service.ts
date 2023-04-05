@@ -45,12 +45,12 @@ export class MapService {
         return observable;
     }
 
-    public addToken(map: Map): Token {
+    public addToken(map: Map, type: 'player' | 'npc' | 'enemy'): Token {
         const token: Token = {
             id: this.createUUIDv4(),
             name: '',
             size: 'medium',
-            type: 'npc',
+            type: type,
             hide: true,
             position: { x: 0, y: 0 }
         };

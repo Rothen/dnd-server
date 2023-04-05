@@ -1,6 +1,27 @@
 <div id='white-board' #whiteBoard tabindex="0"></div>
 
-<mat-button-toggle-group id="paint-mode-select" [(ngModel)]="paintMode" (change)="paintModeChanged()">
-    <mat-button-toggle value="paint"><mat-icon>auto_fix_normal</mat-icon></mat-button-toggle>
-    <mat-button-toggle value="erase"><mat-icon>auto_fix_off</mat-icon></mat-button-toggle>
-</mat-button-toggle-group>
+
+<div *ngIf="selectedMap" class="menu mat-elevation-z8">
+    <button mat-icon-button color="primary" [matMenuTriggerFor]="paintMenu" [matTooltip]="'Mode: ' + selectedPaintMode.name" matTooltipPosition="right">
+        <mat-icon class="{{selectedPenSize.iconClass}}">{{selectedPaintMode.icon}}</mat-icon>
+    </button>
+    <button mat-icon-button color="primary" [matMenuTriggerFor]="penSizeMenu" [matTooltip]="'Pen Size: ' + selectedPenSize.name" matTooltipPosition="right">
+        <mat-icon class="{{selectedPenSize.iconClass}}">{{selectedPenSize.icon}}</mat-icon>
+    </button>
+</div>
+
+<mat-menu #paintMenu="matMenu">
+    <button *ngFor="let paintMode of paintModes" mat-menu-item (click)="setSelectedPaintMode(paintMode)">
+        <mat-icon class="{{selectedPenSize.iconClass}}">{{paintMode.icon}}</mat-icon>
+        <span>{{paintMode.name}}</span>
+    </button>
+</mat-menu>
+
+<mat-menu #penSizeMenu="matMenu">
+    <button *ngFor="let penSize of penSizes" mat-menu-item (click)="setSelectedPenSize(penSize)">
+        <mat-icon class="{{selectedPenSize.iconClass}}">
+            {{penSize.icon}}
+        </mat-icon>
+        <span>{{penSize.name}}</span>
+    </button>
+</mat-menu>
