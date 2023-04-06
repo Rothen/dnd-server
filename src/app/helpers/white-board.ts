@@ -244,6 +244,32 @@ export class WhiteBoard {
         };
     }
 
+    public updateDistances(): void {
+        this.pointerLayer.getChildren(node => {
+            return node.getClassName() === 'Group' && node.id() === '';
+        }).forEach(distanceLine => distanceLine.destroy())
+        const tokenGroups = this.pointerLayer.getChildren(node => {
+            return node.getClassName() === 'Group' && node.id() !== '';
+        });
+
+        if (!this.selectedTokenGroup) {
+            return;
+        }
+
+        const posA = this.selectedTokenGroup.position();
+
+        for (const tokenGroup of tokenGroups) {
+            tokenGroup.zIndex(2);
+            if (tokenGroup === this.selectedTokenGroup) {
+                continue;
+            }
+
+            const lineGroup = DistanceDrawer.draw(posA, tokenGroup.position(), this.map.settings.pixelPerUnit);
+            this.pointerLayer.add(lineGroup);
+            lineGroup.zIndex(0);
+        }
+    }
+
     protected updateLayer(layer: Konva.Layer, image: string, opacity: number = 1): void {
         if (opacity === undefined || opacity === null) {
             opacity = 1;
@@ -267,24 +293,39 @@ export class WhiteBoard {
         }
 
         const tokenGroup = TokenDrawer.drawToken(token, this.map.settings.pixelPerUnit);
-
         this.pointerLayer.add(tokenGroup);
     }
 
     private fixTokenEvents(tokens: Token[]): void {
         this.subscriptions.forEach(subscription => subscription.unsubscribe());
         this.subscriptions = [];
-        const pointerChildren = this.pointerLayer.getChildren();
+        const pointerChildren = this.pointerLayer.getChildren(node => {
+            return node.getClassName() === 'Group' && node.id() !== '';
+        });
 
         for (const token of tokens) {
-            const tokenGroup = pointerChildren.find(tokenGroupEl => tokenGroupEl.id() === token.id);
+            const tokenGroup: Konva.Group = pointerChildren.find(tokenGroupEl => tokenGroupEl.id() === token.id) as Konva.Group;
 
             if (tokenGroup) {
+                const coinGroup: Konva.Group = tokenGroup.getChildren(node => {
+                    return node.getClassName() === 'Group' && node.name() === 'coin';
+                })[0] as Konva.Group;
+                const iconGroup: Konva.Group = tokenGroup.getChildren(node => {
+                    return node.getClassName() === 'Group' && node.name() === 'icon';
+                })[0] as Konva.Group;
+    
+                const visibilityIcon = iconGroup.getChildren(node => {
+                    return node.getClassName() === 'Path' && node.id() === 'visibilityIcon';
+                })[0];
+                const visibilityOffIcon = iconGroup.getChildren(node => {
+                    return node.getClassName() === 'Path' && node.id() === 'visibilityOffIcon';
+                })[0];
+
                 this.subscriptions.push(fromEvent(tokenGroup, 'dragend').subscribe(res => {
                     token.position = tokenGroup.position();
                     this.selectedToken = token;
                     this.selectedTokenGroup = tokenGroup as Konva.Group;
-                    this.drawDistances();
+                    this.updateDistances();
                     this.tokensChanged.next(token);
                 }));
                 this.subscriptions.push(fromEvent(tokenGroup, 'dragmove').pipe(
@@ -293,37 +334,27 @@ export class WhiteBoard {
                     token.position = tokenGroup.position();
                     this.selectedToken = token;
                     this.selectedTokenGroup = tokenGroup as Konva.Group;
-                    this.drawDistances();
+                    this.updateDistances();
                     this.tokensChanged.next(token);
                 }));
-                this.subscriptions.push(fromEvent(tokenGroup, 'click').subscribe(res => {
+                this.subscriptions.push(fromEvent(coinGroup, 'click').subscribe(res => {
                     this.tokenSelected.next(token);
                     this.selectedToken = token;
                     this.selectedTokenGroup = tokenGroup as Konva.Group;
-                    this.drawDistances();
+                    this.updateDistances();
+                }));
+                this.subscriptions.push(fromEvent(iconGroup, 'click').subscribe(event => {
+                    event.preventDefault();
+                    token.hide = !token.hide;
+                    if (token.hide) {
+                        visibilityIcon.opacity(0);
+                        visibilityOffIcon.opacity(1);
+                    } else {
+                        visibilityIcon.opacity(1);
+                        visibilityOffIcon.opacity(0);
+                    }
                 }));
             }
-        }
-    }
-
-    private drawDistances(): void {
-        this.pointerLayer.getChildren(function (node) {
-            return node.getClassName() === 'Group' && node.id() === '';
-        }).forEach(distanceLine => distanceLine.destroy())
-        const tokenGroups = this.pointerLayer.getChildren(function (node) {
-            return node.getClassName() === 'Group' && node.id() !== '';
-        });
-        const posA = this.selectedTokenGroup.position();
-
-        for (const tokenGroup of tokenGroups) {
-            tokenGroup.zIndex(2);
-            if (tokenGroup === this.selectedTokenGroup) {
-                continue;
-            }
-
-            const lineGroup = DistanceDrawer.draw(posA, tokenGroup.position(), this.map.settings.pixelPerUnit);
-            this.pointerLayer.add(lineGroup);
-            lineGroup.zIndex(0);
         }
     }
 }

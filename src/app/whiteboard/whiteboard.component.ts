@@ -139,6 +139,9 @@ export class WhiteboardComponent implements OnInit, OnChanges {
             }
             this.selectedToken = null;
             this.selectedTokenChange.next(null);
+            this.whiteBoard.selectedToken = null;
+            this.whiteBoard.selectedTokenGroup = null;
+            this.whiteBoard.updateDistances();
         });
         this.whiteBoard.tokensChanged.subscribe(token => {
             this.synchronize.updateSettings(this.selectedMap.name, this.selectedMap.settings);

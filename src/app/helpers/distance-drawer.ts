@@ -6,10 +6,7 @@ export class DistanceDrawer {
         const left = (from.x < to.x) ? from : to;
         const right = (from.x >= to.x) ? from : to;
         const dist = Math.sqrt(Math.pow(from.x - to.x, 2) + Math.pow(from.y - to.y, 2));
-        console.log(dist)
-        console.log(pixelPerUnit)
-        const distInFeet = dist / pixelPerUnit * 2.5;
-        console.log(distInFeet)
+        const distInFeet = dist / pixelPerUnit * 5;
         const distInMeter = distInFeet * 0.3048;
         const height = 40;
         const fontSize = 16;
