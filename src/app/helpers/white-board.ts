@@ -293,6 +293,12 @@ export class WhiteBoard {
         }
 
         const tokenGroup = TokenDrawer.drawToken(token, this.map.settings.pixelPerUnit);
+        if (!this.inDmMode) {
+            const iconGroup: Konva.Group = tokenGroup.getChildren(node => {
+                return node.getClassName() === 'Group' && node.name() === 'icon';
+            })[0] as Konva.Group;
+            iconGroup.hide();
+        }
         this.pointerLayer.add(tokenGroup);
     }
 
@@ -353,6 +359,10 @@ export class WhiteBoard {
                         visibilityIcon.opacity(1);
                         visibilityOffIcon.opacity(0);
                     }
+                    this.selectedToken = token;
+                    this.selectedTokenGroup = tokenGroup as Konva.Group;
+                    this.updateDistances();
+                    this.tokensChanged.next(token);
                 }));
             }
         }
