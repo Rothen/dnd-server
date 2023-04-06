@@ -1,6 +1,6 @@
-import Konva from "konva";
-import { Token } from "../interfaces/token";
-import { Vector2d } from "konva/lib/types";
+import Konva from 'konva';
+import { Token } from '../interfaces/token';
+import { Vector2d } from 'konva/lib/types';
 
 export class TokenDrawer {
     static drawToken(token: Token, pixelPerUnit: number): Konva.Group {
@@ -43,7 +43,7 @@ export class TokenDrawer {
         return tokenGroup;
     }
 
-    private static calculateSize(token: Token, pixelPerUnit: number): { size: { width: number, height: number }, fontSize: number} {
+    private static calculateSize(token: Token, pixelPerUnit: number): { size: { width: number; height: number }; fontSize: number} {
         const size = {
             width: pixelPerUnit,
             height: pixelPerUnit

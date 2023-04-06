@@ -230,6 +230,17 @@ export class WhiteBoard {
         this.updateTokens(mapSettings.tokens);
     }
 
+    public getVisibleCenter(): Vector2d {
+        return this.getVisiblePoint({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+    }
+
+    public getVisiblePoint(windowPoint: Vector2d): Vector2d {
+        return {
+            x: (windowPoint.x - this.stage.x()) / this.stage.scaleX(),
+            y: (windowPoint.y - this.stage.y()) / this.stage.scaleY(),
+        };
+    }
+
     protected updateLayer(layer: Konva.Layer, image: string, opacity: number = 1): void {
         if (opacity === undefined || opacity === null) {
             opacity = 1;
@@ -255,17 +266,6 @@ export class WhiteBoard {
         const tokenGroup = TokenDrawer.drawToken(token, this.map.settings.pixelPerUnit);
 
         this.pointerLayer.add(tokenGroup);
-    }
-
-    public getVisibleCenter(): Vector2d {
-        return this.getVisiblePoint({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-    }
-
-    public getVisiblePoint(windowPoint: Vector2d): Vector2d {
-        return {
-            x: (windowPoint.x - this.stage.x()) / this.stage.scaleX(),
-            y: (windowPoint.y - this.stage.y()) / this.stage.scaleY(),
-        }
     }
 
     private fixTokenEvents(tokens: Token[]): void {
