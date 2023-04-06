@@ -63,12 +63,8 @@ jobs:
     - name: Build the app
       run: npm run electron:build
 
-    - name: get-npm-version
-      id: package-version
-      uses: martinbeentjes/npm-get-version-action@v1.3.1
-
     - name: Archive executable
       uses: actions/upload-artifact@v3
       with:
         name: dnd
-        path: release/dnd ${{ steps.package-version.outputs.current-version}}.exe
+        path: release/dnd*.exe
