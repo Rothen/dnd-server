@@ -1,4 +1,4 @@
-import {app, BrowserWindow, screen} from 'electron';
+import { app, BrowserWindow, screen, ipcMain } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -52,6 +52,10 @@ function createWindow(): BrowserWindow {
 
   return win;
 }
+
+ipcMain.on('userDataPath', (event, title) => {
+    event.returnValue = app.getPath('userData');
+});
 
 try {
   // This method will be called when Electron has finished

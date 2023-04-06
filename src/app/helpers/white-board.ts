@@ -4,6 +4,7 @@ import { fromEvent, Subscription, first, Subject, throttleTime } from 'rxjs';
 import { Map } from '../interfaces/map';
 import { Token } from '../interfaces/token';
 import { MapSettings } from '../interfaces/map-settings';
+import { TokenDrawer } from './token-drawer';
 
 export class WhiteBoard {
     public stage: Konva.Stage;
@@ -247,86 +248,24 @@ export class WhiteBoard {
         if (!this.inDmMode && token.hide) {
             return;
         }
-        const scale: Vector2d = { x: 1, y: 1 };
-        const size = {
-            width: this.map.settings.pixelPerUnit,
-            height: this.map.settings.pixelPerUnit
-        };
-        let fontSize = this.map.settings.pixelPerUnit * 0.7;
-        const opacity = (token.hide) ? 0.7 : 1;
-
-        switch (token.size) {
-            case 'tiny':
-                size.width *= 0.5;
-                size.height *= 0.5;
-                fontSize *= 0.5;
-                break;
-            case 'small':
-                size.width *= 1;
-                size.height *= 1;
-                fontSize *= 1;
-                break;
-            case 'medium':
-                size.width *= 1;
-                size.height *= 1;
-                fontSize *= 1;
-                break;
-            case 'large':
-                size.width *= 2;
-                size.height *= 2;
-                fontSize *= 2;
-                break;
-            case 'huge':
-                size.width *= 3;
-                size.height *= 3;
-                fontSize *= 3;
-                break;
-            case 'gargantuan':
-                size.width *= 4;
-                size.height *= 4;
-                fontSize *= 4;
-                break;
+        if (!token.position) {
+            token.position = this.getVisibleCenter();
         }
 
-        const tokenGroup = new Konva.Group({
-            width: size.width,
-            height: size.height,
-            listening: true,
-            draggable: true,
-            x: token.position.x,
-            y: token.position.y,
-            scale,
-            id: token.id, opacity
-        });
-
-        let color = 'green';
-
-        if (token.type === 'npc') {
-            color = 'bisque';
-        } else if (token.type === 'enemy') {
-            color = 'red';
-        }
-
-        tokenGroup.add(new Konva.Circle({
-            fill: color,
-            width: size.width,
-            height: size.height,
-            scale
-        }));
-        tokenGroup.add(new Konva.Text({
-            fontStyle: 'bold',
-            text: token.name.charAt(0),
-            fontSize,
-            verticalAlign: 'middle',
-            align: 'center',
-            width: size.width,
-            height: size.height,
-            x: -size.width / 2 * scale.x,
-            y: -size.height / 2 * scale.y,
-            scale
-        }));
+        const tokenGroup = TokenDrawer.drawToken(token, this.map.settings.pixelPerUnit);
 
         this.pointerLayer.add(tokenGroup);
+    }
+
+    public getVisibleCenter(): Vector2d {
+        return this.getVisiblePoint({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+    }
+
+    public getVisiblePoint(windowPoint: Vector2d): Vector2d {
+        return {
+            x: (windowPoint.x - this.stage.x()) / this.stage.scaleX(),
+            y: (windowPoint.y - this.stage.y()) / this.stage.scaleY(),
+        }
     }
 
     private fixTokenEvents(tokens: Token[]): void {

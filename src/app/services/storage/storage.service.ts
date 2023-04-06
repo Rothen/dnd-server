@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as fs from 'fs';
 import * as path from 'node:path';
+import { ipcRenderer } from 'electron';
 import { APP_CONFIG } from '../../../environments/environment';
 import { Map } from '../../interfaces/map';
 import { MapSettings } from '../../interfaces/map-settings';
@@ -11,14 +12,22 @@ import { MapSettings } from '../../interfaces/map-settings';
 export class StorageService {
     fs: typeof fs;
     path: typeof path;
+    ipcRenderer: typeof ipcRenderer;
+
+    protected userDataPath: string;
+    protected mapsPath: string;
 
     constructor() {
         if (this.isElectron) {
             this.fs = window.require('fs');
             this.path = window.require('node:path');
+            this.ipcRenderer = window.require('electron').ipcRenderer;
 
-            if (!this.fs.existsSync(APP_CONFIG.mapsFolderPath)) {
-                this.fs.mkdirSync(APP_CONFIG.mapsFolderPath);
+            this.userDataPath = this.ipcRenderer.sendSync('userDataPath');
+            this.mapsPath = this.path.join(this.userDataPath, APP_CONFIG.mapsFolderPath);
+
+            if (!this.fs.existsSync(this.mapsPath)) {
+                this.fs.mkdirSync(this.mapsPath);
             }
         }
     }
@@ -29,7 +38,7 @@ export class StorageService {
 
     public listMaps(): Map[] {
         if (this.isElectron) {
-            return this.fs.readdirSync(APP_CONFIG.mapsFolderPath, { withFileTypes: true })
+            return this.fs.readdirSync(this.mapsPath, { withFileTypes: true })
                 .filter(dirent => dirent.isDirectory())
                 .map(dirent => this.loadMap(dirent.name));
         } else {
@@ -39,7 +48,7 @@ export class StorageService {
 
     public loadMap(name: string): Map {
         if (this.isElectron) {
-            const mapFolderPath = this.path.join(APP_CONFIG.mapsFolderPath, name);
+            const mapFolderPath = this.path.join(this.mapsPath, name);
             if (this.fs.existsSync(mapFolderPath)) {
                 return {
                     name,
@@ -57,7 +66,7 @@ export class StorageService {
     }
 
     public deleteMap(map: Map): void {
-        const mapPath = this.path.join(APP_CONFIG.mapsFolderPath, map.name);
+        const mapPath = this.path.join(this.mapsPath, map.name);
         if (this.fs.existsSync(mapPath)) {
             this.fs.rmdirSync(mapPath, { recursive: true });
         }
@@ -65,7 +74,7 @@ export class StorageService {
 
     public storeMap(map: Map): Map {
         if (this.isElectron) {
-            const mapFolderPath = this.path.join(APP_CONFIG.mapsFolderPath, map.name);
+            const mapFolderPath = this.path.join(this.mapsPath, map.name);
             if (!this.fs.existsSync(mapFolderPath)) {
                 this.fs.mkdirSync(mapFolderPath);
             }
@@ -107,27 +116,27 @@ export class StorageService {
     }
 
     public storeMapFile(mapPath: string, scenarioMap: string): void {
-        this.writePng(this.path.join(APP_CONFIG.mapsFolderPath, mapPath, APP_CONFIG.mapPath), scenarioMap);
+        this.writePng(this.path.join(this.mapsPath, mapPath, APP_CONFIG.mapPath), scenarioMap);
     }
 
     public storeFogOfWarFile(mapPath: string, fogOfWar: string): void {
-        this.writePng(this.path.join(APP_CONFIG.mapsFolderPath, mapPath, APP_CONFIG.fogOfWarPath), fogOfWar);
+        this.writePng(this.path.join(this.mapsPath, mapPath, APP_CONFIG.fogOfWarPath), fogOfWar);
     }
 
     public storeMapWithFogOfWarFile(mapPath: string, mapWithFogOfWar: string): void {
-        this.writePng(this.path.join(APP_CONFIG.mapsFolderPath, mapPath, APP_CONFIG.mapWithFogOfWarPath), mapWithFogOfWar);
+        this.writePng(this.path.join(this.mapsPath, mapPath, APP_CONFIG.mapWithFogOfWarPath), mapWithFogOfWar);
     }
 
     public storeDmNotesFile(mapPath: string, dmNotes: string): void {
-        this.writePng(this.path.join(APP_CONFIG.mapsFolderPath, mapPath, APP_CONFIG.dmNotesPath), dmNotes);
+        this.writePng(this.path.join(this.mapsPath, mapPath, APP_CONFIG.dmNotesPath), dmNotes);
     }
 
     public storePlayerNotesFile(mapPath: string, playerNotes: string): void {
-        this.writePng(this.path.join(APP_CONFIG.mapsFolderPath, mapPath, APP_CONFIG.playerNotesPath), playerNotes);
+        this.writePng(this.path.join(this.mapsPath, mapPath, APP_CONFIG.playerNotesPath), playerNotes);
     }
 
     public storeSettingsFile(mapPath: string, settings: MapSettings): void {
-        this.fs.writeFileSync(this.path.join(APP_CONFIG.mapsFolderPath, mapPath, APP_CONFIG.settingsPath), JSON.stringify(settings));
+        this.fs.writeFileSync(this.path.join(this.mapsPath, mapPath, APP_CONFIG.settingsPath), JSON.stringify(settings));
     }
 
     private readPng(filePath: string): string {

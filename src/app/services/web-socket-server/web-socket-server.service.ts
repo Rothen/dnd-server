@@ -1,18 +1,19 @@
 import { Injectable } from '@angular/core';
 import * as ws from 'ws';
+import * as fs from 'fs';
 import * as dgram from 'dgram';
-import { Map } from '../../interfaces/map';
 import { Subject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WebSocketServerService {
+    ws: typeof ws;
+    fs: typeof fs;
+    dgram: typeof dgram;
+
     public clientConnectedSubject: Subject<ws.WebSocket> = new Subject();
     public onUpdateRecieved: Subject<{ client: ws.WebSocket; data: any }> = new Subject();
-
-    protected ws: typeof ws;
-    protected dgram: typeof dgram;
 
     private dgramSocket: dgram.Socket;
     private server: ws.WebSocketServer;
@@ -21,6 +22,7 @@ export class WebSocketServerService {
     constructor() {
         if (this.isElectron) {
             this.ws = window.require('ws');
+            this.fs = window.require('fs');
             this.dgram = window.require('dgram');
         }
     }

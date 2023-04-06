@@ -52,7 +52,7 @@ export class MapService {
             size: 'medium',
             type,
             hide: true,
-            position: { x: 0, y: 0 }
+            position: null
         };
 
         mapToAdd.settings.tokens.push(token);
