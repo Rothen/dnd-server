@@ -1,5 +1,5 @@
-import Konva from "konva";
-import { Vector2d } from "konva/lib/types";
+import Konva from 'konva';
+import { Vector2d } from 'konva/lib/types';
 
 export class DistanceDrawer {
     public static draw(from: Vector2d, to: Vector2d, pixelPerUnit: number): Konva.Group {
@@ -16,7 +16,7 @@ export class DistanceDrawer {
             x: left.x,
             y: left.y - height / 2,
             width: dist,
-            height: height
+            height
         });
         lineGroup.add(new Konva.Line({
             points: [0, height / 2, dist, height / 2],
@@ -28,7 +28,7 @@ export class DistanceDrawer {
             fontSize,
             align: 'center',
             width: dist,
-            height: height,
+            height,
             offsetY: textOffset - 6,
             fillAfterStrokeEnabled: true,
             stroke: 'black',
@@ -41,7 +41,7 @@ export class DistanceDrawer {
             verticalAlign: 'middle',
             align: 'center',
             width: dist,
-            height: height,
+            height,
             offsetY: -textOffset - 8,
             fillAfterStrokeEnabled: true,
             stroke: 'black',
@@ -54,8 +54,8 @@ export class DistanceDrawer {
     }
 
     private static getRotation(left: Vector2d, right: Vector2d, dist: number): number {
-        let rotation: number = 0;
-        
+        let rotation = 0;
+
         if (left.y > right.y) {
             const G = (right.y - left.y);
             rotation = Math.asin(G / dist) * 180 / Math.PI;
@@ -69,7 +69,7 @@ export class DistanceDrawer {
 
     private static rotateAroundPoint(shape: Konva.Group, angleDegrees: number, point: Vector2d) {
         // sin + cos require radians
-        let angleRadians = angleDegrees * Math.PI / 180;
+        const angleRadians = angleDegrees * Math.PI / 180;
 
         const x =
             point.x +
@@ -81,9 +81,9 @@ export class DistanceDrawer {
             (shape.y() - point.y) * Math.cos(angleRadians);
 
         // move the rotated shape in relation to the rotation point.
-        shape.position({ x: x, y: y });
+        shape.position({ x, y });
 
-        // rotate the shape in place around its natural rotation point 
+        // rotate the shape in place around its natural rotation point
         shape.rotation(shape.rotation() + angleDegrees);
     }
 }

@@ -60,6 +60,22 @@ export class WhiteBoard {
             this.drawToken(token);
         });
         this.fixTokenEvents(tokens);
+        if (this.selectedToken) {
+            console.log('here');
+            const foundToken = tokens.find(token => token.id === this.selectedToken.id);
+
+            if (foundToken && (!foundToken.hide || this.inDmMode)) {
+                console.log('here1');
+                this.selectedToken = foundToken;
+                this.selectedTokenGroup = this.playerNotesLayer.getChildren(node => node.id() === foundToken.id)[0] as Konva.Group;
+            } else {
+                console.log('here2');
+                this.selectedToken = null;
+                this.selectedTokenGroup = null;
+            }
+        }
+
+        this.updateDistances();
     }
 
     public reset(force: boolean): void {
@@ -245,12 +261,10 @@ export class WhiteBoard {
     }
 
     public updateDistances(): void {
-        this.pointerLayer.getChildren(node => {
-            return node.getClassName() === 'Group' && node.id() === '';
-        }).forEach(distanceLine => distanceLine.destroy())
-        const tokenGroups = this.pointerLayer.getChildren(node => {
-            return node.getClassName() === 'Group' && node.id() !== '';
-        });
+        this.pointerLayer.getChildren(node =>
+            node.getClassName() === 'Group' && node.id() === '')
+        .forEach(distanceLine => distanceLine.destroy());
+        const tokenGroups = this.pointerLayer.getChildren(node => node.getClassName() === 'Group' && node.id() !== '');
 
         if (!this.selectedTokenGroup) {
             return;
@@ -294,9 +308,8 @@ export class WhiteBoard {
 
         const tokenGroup = TokenDrawer.drawToken(token, this.map.settings.pixelPerUnit);
         if (!this.inDmMode) {
-            const iconGroup: Konva.Group = tokenGroup.getChildren(node => {
-                return node.getClassName() === 'Group' && node.name() === 'icon';
-            })[0] as Konva.Group;
+            const iconGroup: Konva.Group = tokenGroup.getChildren(node =>
+                node.getClassName() === 'Group' && node.name() === 'icon')[0] as Konva.Group;
             iconGroup.hide();
         }
         this.pointerLayer.add(tokenGroup);
@@ -305,27 +318,25 @@ export class WhiteBoard {
     private fixTokenEvents(tokens: Token[]): void {
         this.subscriptions.forEach(subscription => subscription.unsubscribe());
         this.subscriptions = [];
-        const pointerChildren = this.pointerLayer.getChildren(node => {
-            return node.getClassName() === 'Group' && node.id() !== '';
-        });
+        const pointerChildren = this.pointerLayer.getChildren(node => node.getClassName() === 'Group' && node.id() !== '');
 
         for (const token of tokens) {
             const tokenGroup: Konva.Group = pointerChildren.find(tokenGroupEl => tokenGroupEl.id() === token.id) as Konva.Group;
 
             if (tokenGroup) {
-                const coinGroup: Konva.Group = tokenGroup.getChildren(node => {
-                    return node.getClassName() === 'Group' && node.name() === 'coin';
-                })[0] as Konva.Group;
-                const iconGroup: Konva.Group = tokenGroup.getChildren(node => {
-                    return node.getClassName() === 'Group' && node.name() === 'icon';
-                })[0] as Konva.Group;
-    
-                const visibilityIcon = iconGroup.getChildren(node => {
-                    return node.getClassName() === 'Path' && node.id() === 'visibilityIcon';
-                })[0];
-                const visibilityOffIcon = iconGroup.getChildren(node => {
-                    return node.getClassName() === 'Path' && node.id() === 'visibilityOffIcon';
-                })[0];
+                const coinGroup: Konva.Group = tokenGroup.getChildren(node =>
+                    node.getClassName() === 'Group' && node.name() === 'coin'
+                )[0] as Konva.Group;
+                const iconGroup: Konva.Group = tokenGroup.getChildren(node =>
+                    node.getClassName() === 'Group' && node.name() === 'icon'
+                )[0] as Konva.Group;
+
+                const visibilityIcon = iconGroup.getChildren(node =>
+                    node.getClassName() === 'Path' && node.id() === 'visibilityIcon'
+                )[0];
+                const visibilityOffIcon = iconGroup.getChildren(node =>
+                    node.getClassName() === 'Path' && node.id() === 'visibilityOffIcon'
+                )[0];
 
                 this.subscriptions.push(fromEvent(tokenGroup, 'dragend').subscribe(res => {
                     token.position = tokenGroup.position();

@@ -24,10 +24,13 @@ export class StorageService {
             this.ipcRenderer = window.require('electron').ipcRenderer;
 
             this.userDataPath = this.ipcRenderer.sendSync('userDataPath');
-            this.mapsPath = this.path.join(this.userDataPath, APP_CONFIG.mapsFolderPath);
 
-            if (!this.fs.existsSync(this.mapsPath)) {
-                this.fs.mkdirSync(this.mapsPath);
+            if (this.userDataPath && typeof this.userDataPath === 'string') {
+                this.mapsPath = this.path.join(this.userDataPath, APP_CONFIG.mapsFolderPath);
+
+                if (!this.fs.existsSync(this.mapsPath)) {
+                    this.fs.mkdirSync(this.mapsPath);
+                }
             }
         }
     }
@@ -37,6 +40,9 @@ export class StorageService {
     }
 
     public listMaps(): Map[] {
+        if (!this.userDataPath && typeof this.userDataPath === 'string') {
+            return [];
+        }
         if (this.isElectron) {
             return this.fs.readdirSync(this.mapsPath, { withFileTypes: true })
                 .filter(dirent => dirent.isDirectory())
