@@ -90,7 +90,8 @@ export class TokenDrawer {
             x: 0,
             y: 0,
             id: 'visibilityIcon',
-            listening: true
+            listening: true,
+            opacity: token.hide ? 0 : 1
         });
 
         const visibilityOffIcon = new Konva.Path({
@@ -104,7 +105,8 @@ export class TokenDrawer {
             x: 0,
             y: 0,
             id: 'visibilityOffIcon',
-            listening: true
+            listening: true,
+            opacity: token.hide ? 1 : 0
         });
 
         visibilityIcon.x(-visibilityIcon.getClientRect().width / 2);
