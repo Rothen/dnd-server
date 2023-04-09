@@ -1,11 +1,11 @@
 import { Subject } from 'rxjs';
-import { MapSettings } from '../../interfaces/map-settings';
-import { Map } from '../../interfaces/map';
+import { MapSettingsData } from '../../interfaces/map-settings-data';
+import { MapData } from '../../interfaces/map-data';
 
 export interface MapUpdate {
     update: string;
     mapName: string;
-    value: Map;
+    value: MapData;
 }
 
 export interface StringUpdate {
@@ -17,10 +17,11 @@ export interface StringUpdate {
 export interface MapSettingsUpdate {
     update: string;
     mapName: string;
-    value: MapSettings;
+    value: MapSettingsData;
 }
 
 export abstract class Synchronize {
+    public mapDeleteRecieved: Subject<MapUpdate> = new Subject();
     public mapUpdateRecieved: Subject<MapUpdate> = new Subject();
     public scenarioMapUpdateRecieved: Subject<StringUpdate> = new Subject();
     public fogOfWarUpdateRecieved: Subject<StringUpdate> = new Subject();
@@ -31,6 +32,9 @@ export abstract class Synchronize {
 
     protected handleUpdate(data: any): void {
         switch (data.update) {
+            case 'map_delete':
+                this.mapDeleteRecieved.next(data);
+                break;
             case 'map':
                 this.mapUpdateRecieved.next(data);
                 break;
@@ -57,11 +61,12 @@ export abstract class Synchronize {
 
     abstract startSynchronizing(): void;
     abstract stopSynchronizing(): void;
-    abstract updateMap(map: Map): void;
+    abstract deleteMap(map: MapData): void;
+    abstract updateMap(map: MapData): void;
     abstract updateScenarioMap(mapName: string, scenarioMap: string): void;
     abstract updateFogOfWar(mapName: string, fogOfWar: string): void;
     abstract updateMapWithFogOfWar(mapName: string, mapWithFogOfWar: string): void;
     abstract updateDmNotes(mapName: string, dmNotes: string): void;
     abstract updatePlayerNotes(mapName: string, playerNotes: string): void;
-    abstract updateSettings(mapName: string, mapSettings: MapSettings): void;
+    abstract updateSettings(mapName: string, mapSettings: MapSettingsData): void;
 }

@@ -1,11 +1,9 @@
 import Konva from 'konva';
 import { Vector2d } from 'konva/lib/types';
-import { fromEvent, Subscription, first, Subject, throttleTime } from 'rxjs';
-import { Map } from '../interfaces/map';
-import { Token } from '../interfaces/token';
-import { MapSettings } from '../interfaces/map-settings';
-import { TokenDrawer } from './token-drawer';
-import { DistanceDrawer } from './distance-drawer';
+import { fromEvent, Subscription, first, Subject } from 'rxjs';
+import { MapData } from '../interfaces/map-data';
+import { TokenData } from '../interfaces/token-data';
+import { MapSettingsData } from '../interfaces/map-settings-data';
 
 export class WhiteBoard {
     public stage: Konva.Stage;
@@ -16,11 +14,11 @@ export class WhiteBoard {
     public dmNotesLayer: Konva.Layer;
     public playerNotesLayer: Konva.Layer;
     public pointerLayer: Konva.Layer;
-    public tokenSelected: Subject<Token> = new Subject();
-    public map: Map;
-    public tokensChanged: Subject<Token> = new Subject();
+    public tokenSelected: Subject<TokenData> = new Subject();
+    public map: MapData;
+    public tokensChanged: Subject<TokenData> = new Subject();
     public inDmMode: boolean;
-    public selectedToken: Token;
+    public selectedToken: TokenData;
     public selectedTokenGroup: Konva.Group;
 
     protected subscriptions: Subscription[] = [];
@@ -31,8 +29,8 @@ export class WhiteBoard {
         this.initLayers();
     }
 
-    public loadMap(map: Map, inDmMode: boolean) {
-        this.inDmMode = inDmMode;
+    public loadMap(map: MapData, inDmMode: boolean) {
+        /*this.inDmMode = inDmMode;
         const force = !this.map || this.map.settings.id !== map.settings.id;
         this.reset(force);
         this.map = map;
@@ -41,18 +39,18 @@ export class WhiteBoard {
                 x: (window.innerWidth - this.map.settings.width) / 2,
                 y: (window.innerHeight - this.map.settings.height) / 2
             });
-        }
+        }*/
 
-        this.updateScenarioMap(this.map.scenarioMap);
+        /*this.updateScenarioMap(this.map.scenarioMap);
         this.updateFogOfWar(this.map.fogOfWar);
         this.updateMapWithFogOfWar(this.map.mapWithFogOfWar);
         this.updateDmNotes(this.map.dmNotes);
-        this.updatePlayerNotes(this.map.playerNotes);
-        this.updateSettings(this.map.settings);
-        this.updateTokens(this.map.settings.tokens);
+        this.updatePlayerNotes(this.map.playerNotes);*/
+        /*this.updateSettings(this.map.settings);
+        this.updateTokens(this.map.settings.tokens);*/
     }
 
-    public updateTokens(tokens: Token[]): void {
+    public updateTokens(tokens: TokenData[]): void {
         this.pointerLayer.destroyChildren();
         this.subscriptions.forEach(subscription => subscription.unsubscribe());
         this.subscriptions = [];
@@ -172,80 +170,7 @@ export class WhiteBoard {
         this.pointerLayer.draw();
     }
 
-    public getScenarioMapDataURL(): string {
-        const pos = this.stage.getPosition();
-        const scale = this.stage.scale() as Vector2d;
-        const rec = {
-            x: pos.x,
-            y: pos.y,
-            width: this.map.settings.width * scale.x,
-            height: this.map.settings.height * scale.y,
-            pixelRatio: 1 / scale.y
-        };
-        return this.backLayer.toDataURL(rec);
-    }
-
-    public getFogOfWarDataURL(): string {
-        const pos = this.stage.getPosition();
-        const scale = this.stage.scale() as Vector2d;
-        const rec = {
-            x: pos.x,
-            y: pos.y,
-            width: this.map.settings.width * scale.x,
-            height: this.map.settings.height * scale.y,
-            pixelRatio: 1 / scale.y
-        };
-        return this.fogOfWarLayer.toDataURL(rec);
-    }
-
-    public getDmNotesDataURL(): string {
-        const pos = this.stage.getPosition();
-        const scale = this.stage.scale() as Vector2d;
-        const rec = {
-            x: 0,
-            y: 0,
-            width: 0 * scale.x,
-            height: 0 * scale.y,
-            pixelRatio: 1 / scale.y
-        };
-        return this.dmNotesLayer.toDataURL(rec);
-    }
-
-    public getPlayerNotesDataURL(): string {
-        const pos = this.stage.getPosition();
-        const scale = this.stage.scale() as Vector2d;
-        const rec = {
-            x: 0,
-            y: 0,
-            width: 0 * scale.x,
-            height: 0 * scale.y,
-            pixelRatio: 1 / scale.y
-        };
-        return this.playerNotesLayer.toDataURL(rec);
-    }
-
-    public updatePlayerNotes(playerNotes: string): void {
-        this.updateLayer(this.playerNotesLayer, playerNotes);
-    }
-
-    public updateScenarioMap(scenarioMap: string): void {
-        this.updateLayer(this.backLayer, scenarioMap);
-        this.updateLayer(this.mapLayer, scenarioMap, 0.4);
-    }
-
-    public updateFogOfWar(fogOfWar: string): void {
-        this.updateLayer(this.fogOfWarLayer, fogOfWar);
-    }
-
-    public updateDmNotes(dmNotes: string): void {
-        this.updateLayer(this.dmNotesLayer, dmNotes);
-    }
-
-    public updateMapWithFogOfWar(mapWithFogOfWar: string): void {
-        this.updateLayer(this.mapWithFogOfWarLayer, mapWithFogOfWar);
-    }
-
-    public updateSettings(mapSettings: MapSettings): void {
+    public updateSettings(mapSettings: MapSettingsData): void {
         this.updateTokens(mapSettings.tokens);
     }
 
@@ -261,7 +186,7 @@ export class WhiteBoard {
     }
 
     public updateDistances(): void {
-        this.pointerLayer.getChildren(node =>
+        /*this.pointerLayer.getChildren(node =>
             node.getClassName() === 'Group' && node.id() === '')
         .forEach(distanceLine => distanceLine.destroy());
         const tokenGroups = this.pointerLayer.getChildren(node => node.getClassName() === 'Group' && node.id() !== '');
@@ -281,10 +206,10 @@ export class WhiteBoard {
             const lineGroup = DistanceDrawer.draw(posA, tokenGroup.position(), this.map.settings.pixelPerUnit);
             this.pointerLayer.add(lineGroup);
             lineGroup.zIndex(0);
-        }
+        }*/
     }
 
-    protected updateLayer(layer: Konva.Layer, image: string, opacity: number = 1): void {
+    public updateLayer(layer: Konva.Layer, image: string, opacity: number = 1): void {
         if (opacity === undefined || opacity === null) {
             opacity = 1;
         }
@@ -298,8 +223,8 @@ export class WhiteBoard {
         htmlImage.src = image;
     }
 
-    protected drawToken(token: Token): void {
-        if (!this.inDmMode && token.hide) {
+    protected drawToken(token: TokenData): void {
+        /*if (!this.inDmMode && token.hide) {
             return;
         }
         if (!token.position) {
@@ -312,11 +237,11 @@ export class WhiteBoard {
                 node.getClassName() === 'Group' && node.name() === 'icon')[0] as Konva.Group;
             iconGroup.hide();
         }
-        this.pointerLayer.add(tokenGroup);
+        this.pointerLayer.add(tokenGroup);*/
     }
 
-    private fixTokenEvents(tokens: Token[]): void {
-        this.subscriptions.forEach(subscription => subscription.unsubscribe());
+    private fixTokenEvents(tokens: TokenData[]): void {
+        /*this.subscriptions.forEach(subscription => subscription.unsubscribe());
         this.subscriptions = [];
         const pointerChildren = this.pointerLayer.getChildren(node => node.getClassName() === 'Group' && node.id() !== '');
 
@@ -376,6 +301,6 @@ export class WhiteBoard {
                     this.tokensChanged.next(token);
                 }));
             }
-        }
+        }*/
     }
 }

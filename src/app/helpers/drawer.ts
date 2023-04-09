@@ -6,11 +6,13 @@ import { WhiteBoard } from './white-board';
 import { Observable, forkJoin, from, map } from 'rxjs';
 import Konva from 'konva';
 import { Synchronize } from '../services/synchronize/synchronize';
+import { MapService } from '../services/map/map.service';
 
 export abstract class Drawer {
     protected drawService: DrawService;
     protected eventElement: HasEventTargetAddRemove<MouseEvent>;
     protected synchronize: Synchronize;
+    protected mapService: MapService;
     protected whiteBoard: WhiteBoard;
     protected layer: Layer;
     protected copySize: Vector2d;
@@ -23,6 +25,7 @@ export abstract class Drawer {
         drawService: DrawService,
         eventElement: HasEventTargetAddRemove<MouseEvent>,
         synchronize: Synchronize,
+        mapService: MapService,
         whiteBoard: WhiteBoard,
         layer: Layer,
         copySize: Vector2d) {
@@ -30,6 +33,7 @@ export abstract class Drawer {
         this.drawService = drawService;
         this.eventElement = eventElement;
         this.synchronize = synchronize;
+        this.mapService = mapService;
         this.whiteBoard = whiteBoard;
         this.layer = layer;
         this.copySize = copySize;
@@ -57,12 +61,12 @@ export class FogDrawer extends Drawer {
         const observable = this.createMapWithFogOfWarDataURL();
 
         observable.subscribe(mapWithFogOfWar => {
-            this.whiteBoard.map.fogOfWar = this.whiteBoard.getFogOfWarDataURL();
-            this.whiteBoard.map.mapWithFogOfWar = mapWithFogOfWar;
+            this.mapService.mapData.fogOfWar = this.mapService.getFogOfWarDataURL();
+            this.mapService.mapData.mapWithFogOfWar = mapWithFogOfWar;
 
-            this.synchronize.updateFogOfWar(this.whiteBoard.map.name, this.whiteBoard.map.fogOfWar);
-            this.synchronize.updateMapWithFogOfWar(this.whiteBoard.map.name, this.whiteBoard.map.mapWithFogOfWar);
-            return this.whiteBoard.map;
+            this.synchronize.updateFogOfWar(this.mapService.mapData.name, this.mapService.mapData.fogOfWar);
+            this.synchronize.updateMapWithFogOfWar(this.mapService.mapData.name, this.mapService.mapData.mapWithFogOfWar);
+            return this.mapService.mapData;
         });
     }
 
@@ -72,8 +76,8 @@ export class FogDrawer extends Drawer {
         const rec = {
             x: pos.x,
             y: pos.y,
-            width: this.whiteBoard.map.settings.width * scale.x,
-            height: this.whiteBoard.map.settings.height * scale.y,
+            width: this.mapService.mapData.settings.width * scale.x,
+            height: this.mapService.mapData.settings.height * scale.y,
             pixelRatio: 1 / scale.y
         };
         const observables = [
@@ -104,7 +108,7 @@ export class PlayerNotesDrawer extends Drawer {
     public icon = 'draw';
 
     public done(): void {
-        this.whiteBoard.map.playerNotes = this.whiteBoard.getPlayerNotesDataURL();
-        this.synchronize.updatePlayerNotes(this.whiteBoard.map.name, this.whiteBoard.map.playerNotes);
+        this.mapService.mapData.playerNotes = this.mapService.getPlayerNotesDataURL();
+        this.synchronize.updatePlayerNotes(this.mapService.mapData.name, this.mapService.mapData.playerNotes);
     }
 }

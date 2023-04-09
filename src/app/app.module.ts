@@ -25,6 +25,7 @@ import { WhiteboardComponent } from './whiteboard/whiteboard.component';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @NgModule({
     declarations: [
@@ -53,7 +54,8 @@ import { MatMenuModule } from '@angular/material/menu';
         MatTableModule,
         MatTooltipModule,
         MatToolbarModule,
-        MatMenuModule
+        MatMenuModule,
+        MatProgressSpinnerModule
     ],
     providers: [
         { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: false } }

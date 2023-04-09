@@ -1,6 +1,6 @@
 import { Vector2d } from 'konva/lib/types';
 
-export interface Token {
+export interface TokenData {
     id: string;
     type: 'player' | 'npc' | 'enemy';
     name: string;

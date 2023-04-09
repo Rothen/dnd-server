@@ -1,11 +1,11 @@
-import { MapSettings } from './map-settings';
+import { MapSettingsData } from './map-settings-data';
 
-export interface Map {
+export interface MapData {
     name: string;
     scenarioMap: string;
     fogOfWar: string;
     mapWithFogOfWar: string;
     dmNotes: string;
     playerNotes: string;
-    settings: MapSettings;
+    settings: MapSettingsData;
 }
