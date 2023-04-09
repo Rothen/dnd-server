@@ -14,7 +14,7 @@
                 <mat-spinner style="margin-right: 10px;" [diameter]="30" color="accent"></mat-spinner> Looking for Campaigns
             </div>
             <mat-list role="list">
-                <mat-radio-group aria-label="Select an option" [(ngModel)]="selectedServer">
+                <mat-radio-group aria-label="Select an option" [(ngModel)]="selectedServer" (change)="changeDetectorRef.detectChanges()">
                     <mat-list-item *ngFor="let server of servers">
                         <mat-radio-button value="{{server}}">{{server}}</mat-radio-button>
                     </mat-list-item>

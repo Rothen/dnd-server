@@ -36,9 +36,9 @@ export class MapService {
 
     public setSelectedToken(tokenData: TokenData): void {
         if (tokenData) {
-            const token = this.tokens.find(token => token.tokenData.id === tokenData.id);
-            if (token) {
-                this.selectedToken = token;
+            const foundToken = this.tokens.find(token => token.tokenData.id === tokenData.id);
+            if (foundToken) {
+                this.selectedToken = foundToken;
             } else {
                 this.selectedToken = null;
             }
@@ -48,7 +48,7 @@ export class MapService {
 
         if (this.selectedToken) {
             this.distances.forEach(distance => {
-                if (distance.tokens[0] == this.selectedToken || distance.tokens[1] == this.selectedToken) {
+                if (distance.tokens[0] === this.selectedToken || distance.tokens[1] === this.selectedToken) {
                     if (this.inDmMode || (!distance.tokens[0].tokenData.hide && !distance.tokens[1].tokenData.hide)) {
                         distance.lineGroup.show();
                     } else {
@@ -227,7 +227,7 @@ export class MapService {
 
             distance.draw();
 
-            if (distance.tokens[0] == this.selectedToken || distance.tokens[1] == this.selectedToken) {
+            if (distance.tokens[0] === this.selectedToken || distance.tokens[1] === this.selectedToken) {
                 if (this.inDmMode || (!distance.tokens[0].tokenData.hide && !distance.tokens[1].tokenData.hide)) {
                     distance.lineGroup.show();
                 } else {

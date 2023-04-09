@@ -10,11 +10,11 @@ export class ServerDiscoveryService {
     ws: typeof ws;
     dgram: typeof dgram;
 
+    public onDiscovered: Subject<{ name: string; port: number }[]> = new Subject();
+    public discoveredServers: { name: string; port: number }[] = [];
+
     private discoveryInterval: NodeJS.Timeout;
     private socket: dgram.Socket;
-
-    public onDiscovered: Subject<{ name: string, port: number }[]> = new Subject();
-    public discoveredServers: { name: string, port: number }[] = [];
 
     constructor() {
         if (this.isElectron) {
@@ -25,6 +25,10 @@ export class ServerDiscoveryService {
         }
     }
 
+    get isElectron(): boolean {
+        return !!(window && window.process && window.process.type);
+    }
+
     public stop(): void {
         clearInterval(this.discoveryInterval);
         this.discoveryInterval = null;
@@ -32,10 +36,6 @@ export class ServerDiscoveryService {
             this.socket.close();
             this.socket = null;
         }
-    }
-
-    get isElectron(): boolean {
-        return !!(window && window.process && window.process.type);
     }
 
     private discoverServers(): void {

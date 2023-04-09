@@ -1,8 +1,8 @@
-import { Vector2d } from "konva/lib/types";
-import { TokenData } from "../interfaces/token-data";
-import Konva from "konva";
-import { WhiteBoard } from "../helpers/white-board";
-import { Subscription, fromEvent, throttleTime, Subject } from "rxjs";
+import { Vector2d } from 'konva/lib/types';
+import { TokenData } from '../interfaces/token-data';
+import Konva from 'konva';
+import { WhiteBoard } from '../helpers/white-board';
+import { Subscription, fromEvent, throttleTime, Subject } from 'rxjs';
 
 interface Size {
     width: number;
@@ -28,15 +28,27 @@ export class Token {
     private visibilityIcon: Konva.Path;
     private visibilityOffIcon: Konva.Path;
     private tokenGroup: Konva.Group;
-    private tokenChip = new Konva.Circle
+    private tokenChip = new Konva.Circle();
 
-    private isDrawen: boolean = false;
+    private isDrawen = false;
+
+    private dragEndSubscription: Subscription;
+    private dragMoveSubscription: Subscription;
+    private coinGroupClickSubscription: Subscription;
+    private iconGroupSubscription: Subscription;
 
     constructor(tokenData: TokenData, pixelPerUnit: number, whiteBoard: WhiteBoard, inDmMode: boolean) {
         this.tokenData = tokenData;
         this.pixelPerUnit = pixelPerUnit;
         this.whiteBoard = whiteBoard;
         this.inDmMode = inDmMode;
+    }
+
+    public destroy(): void {
+        this.removeEventListeners();
+        this.tokenGroup.destroy();
+        this.onTokenSelect.complete();
+        this.onTokenChange.complete();
     }
 
     public draw(): void {
@@ -127,18 +139,6 @@ export class Token {
         this.visibilityOffIcon.y(-size.height / 2 - 12 * 3);
     }
 
-    public destroy(): void {
-        this.removeEventListeners();
-        this.tokenGroup.destroy();
-        this.onTokenSelect.complete();
-        this.onTokenChange.complete();
-    }
-
-    private dragEndSubscription: Subscription;
-    private dragMoveSubscription: Subscription;
-    private coinGroupClickSubscription: Subscription;
-    private iconGroupSubscription: Subscription;
-
     private addEventListeners(): void {
         this.dragEndSubscription = fromEvent(this.tokenGroup, 'dragend').subscribe(res => {
             this.tokenData.position = this.tokenGroup.position();
@@ -171,12 +171,20 @@ export class Token {
     }
 
     private removeEventListeners(): void {
-        (this.dragEndSubscription) ? this.dragEndSubscription.unsubscribe() : null;
-        (this.dragMoveSubscription) ? this.dragMoveSubscription.unsubscribe() : null;
-        (this.coinGroupClickSubscription) ? this.coinGroupClickSubscription.unsubscribe() : null;
-        (this.iconGroupSubscription) ? this.iconGroupSubscription.unsubscribe() : null;
+        if (this.dragEndSubscription) {
+            this.dragEndSubscription.unsubscribe();
+        }
+        if (this.dragMoveSubscription) {
+            this.dragMoveSubscription.unsubscribe();
+        }
+        if (this.coinGroupClickSubscription) {
+            this.coinGroupClickSubscription.unsubscribe();
+        }
+        if (this.iconGroupSubscription) {
+            this.iconGroupSubscription.unsubscribe();
+        }
     }
-    
+
     private createCoinGroup(token: TokenData, scale: Vector2d, size: Size, fontSize: number, color: string): void {
         this.coinGroup = new Konva.Group({
             width: size.width,

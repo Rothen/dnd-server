@@ -49,7 +49,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         private storageService: StorageService,
         public serverSyncronizeService: ServerSynchronizeService,
         public clientSyncronizeService: ClientSynchronizeService,
-        private changeDetectorRef: ChangeDetectorRef,
+        public changeDetectorRef: ChangeDetectorRef,
         public dialog: MatDialog,
         private mapDataService: MapDataService,
         private mapService: MapService,
@@ -133,6 +133,10 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.synchronize.updateSettings(this.selectedMap.name, this.selectedMap.settings);
     }
 
+    public onNgModelChange(event: any) {
+        console.log('On ngModelChange : ', event);
+    }
+
     private initSynchronizeEvents(): void {
         this.synchronize.mapDeleteRecieved.subscribe(data => {
             this.selectedMap = null;
@@ -167,9 +171,5 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.synchronize.settingsUpdateRecieved.subscribe(update => {
             this.mapService.update(update.value);
         });
-    }
-
-    public onNgModelChange(event: any) {
-        console.log('On ngModelChange : ', event);
     }
 }

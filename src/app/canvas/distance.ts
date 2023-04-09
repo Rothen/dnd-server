@@ -1,16 +1,16 @@
-import Konva from "konva";
-import { Vector2d } from "konva/lib/types";
-import { Token } from "./token";
-import { WhiteBoard } from "../helpers/white-board";
+import Konva from 'konva';
+import { Vector2d } from 'konva/lib/types';
+import { Token } from './token';
+import { WhiteBoard } from '../helpers/white-board';
 
 export class Distance {
     public tokens: Token[];
     public pixelPerUnit: number;
     public whiteBoard: WhiteBoard;
     public inDmMode: boolean;
-    
-    private isDrawen: boolean = false;
     public lineGroup: Konva.Group;
+
+    private isDrawen = false;
     private distanceLine: Konva.Line;
     private distanceTextM: Konva.Text;
     private distanceTextFt: Konva.Text;
@@ -23,9 +23,15 @@ export class Distance {
     }
 
     public draw(): void {
-        const dist = Math.sqrt(Math.pow(this.tokens[0].getPosition().x - this.tokens[1].getPosition().x, 2) + Math.pow(this.tokens[0].getPosition().y - this.tokens[1].getPosition().y, 2));
-        const left = (this.tokens[0].getPosition().x < this.tokens[1].getPosition().x) ? this.tokens[0].getPosition() : this.tokens[1].getPosition();
-        const right = (this.tokens[0].getPosition().x >= this.tokens[1].getPosition().x) ? this.tokens[0].getPosition() : this.tokens[1].getPosition();
+        const dist = Math.sqrt(
+            Math.pow(this.tokens[0].getPosition().x - this.tokens[1].getPosition().x, 2)
+             + Math.pow(this.tokens[0].getPosition().y - this.tokens[1].getPosition().y, 2));
+        const left = (this.tokens[0].getPosition().x < this.tokens[1].getPosition().x) ?
+            this.tokens[0].getPosition() :
+            this.tokens[1].getPosition();
+        const right = (this.tokens[0].getPosition().x >= this.tokens[1].getPosition().x) ?
+            this.tokens[0].getPosition() :
+            this.tokens[1].getPosition();
         const height = 40;
 
         if (!this.isDrawen) {
