@@ -40,11 +40,11 @@ export class Distance {
         const distInFeet = dist / this.pixelPerUnit * 5;
         const distInMeter = distInFeet * 0.3048;
 
-        /*if (this.inDmMode || (!this.tokens[0].tokenData.hide && !this.tokens[1].tokenData.hide)) {
+        if (this.inDmMode || (!this.tokens[0].tokenData.hide && !this.tokens[1].tokenData.hide)) {
             this.lineGroup.show();
         } else {
             this.lineGroup.hide();
-        }*/
+        }
 
         this.lineGroup.x(left.x);
         this.lineGroup.y(left.y - height / 2);

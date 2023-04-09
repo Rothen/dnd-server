@@ -113,6 +113,8 @@ export class MapService {
         });
 
         this.mapData.settings.tokens.forEach(tokenData => this.updateToken(tokenData));
+
+        this.distances.forEach(distance => distance.draw());
     }
 
     public destroy(): void {
@@ -187,8 +189,8 @@ export class MapService {
         const rec = {
             x: pos.x,
             y: pos.y,
-            width: this.mapData.settings.width * scale.x,
-            height: this.mapData.settings.height * scale.y,
+            width: Math.ceil(this.mapData.settings.width * scale.x),
+            height: Math.ceil(this.mapData.settings.height * scale.y),
             pixelRatio: 1 / scale.y
         };
         return this.whiteBoard.fogOfWarLayer.toDataURL(rec);

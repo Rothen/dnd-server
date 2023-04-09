@@ -97,8 +97,10 @@ export class Token {
             if (this.tokenData.hide) {
                 this.tokenGroup.hide();
             } else {
-                this.visibilityIcon.show();
+                this.tokenGroup.show();
             }
+            this.visibilityIcon.opacity(0);
+            this.visibilityOffIcon.opacity(0);
         }
 
         this.tokenGroup.scale(scale);

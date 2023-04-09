@@ -15,6 +15,7 @@ import { ClientSynchronizeService } from './services/synchronize/client-synchron
 import { MapService } from './services/map/map.service';
 import { ServerDiscoveryService } from './services/server-discovery/server-discovery.service';
 import { WebSocketService } from './services/web-socket/web-socket.service';
+import { MatSelectionList } from '@angular/material/list';
 
 interface DialogResult {
     name: string;
@@ -31,6 +32,7 @@ interface DialogResult {
 export class AppComponent implements OnInit, AfterViewInit {
     @ViewChild(WhiteboardComponent) whiteBoardComponent: WhiteboardComponent;
     @ViewChild(ControlsComponent) controlsComponent: ControlsComponent;
+    @ViewChild(MatSelectionList) serverSelectionList: MatSelectionList;
 
     public title = 'dnd';
     public maps: MapData[];
@@ -40,8 +42,8 @@ export class AppComponent implements OnInit, AfterViewInit {
     public paintMode = 'paint';
     public synchronize: Synchronize;
     public inDmMode: boolean;
-    public servers: { name: string, port: number }[] = [];
-    public selectedServer: { name: string, port: number };
+    public servers: string[];
+    public selectedServer: string;
 
     constructor(
         private storageService: StorageService,
@@ -58,7 +60,6 @@ export class AppComponent implements OnInit, AfterViewInit {
 
     public ngOnInit() {
         this.maps = this.storageService.listMaps();
-        this.serverDiscoveryService.onDiscovered.subscribe(servers => this.servers = servers);
         this.webSocketServer.clientConnectedSubject.subscribe(
             client => this.webSocketServer.updateClient(client, this.selectedMap)
         );
@@ -69,6 +70,10 @@ export class AppComponent implements OnInit, AfterViewInit {
 
     public ngAfterViewInit(): void {
         this.mapService.setWhiteBoard(this.whiteBoardComponent.whiteBoard);
+        this.serverDiscoveryService.onDiscovered.subscribe(servers => {
+            this.servers = servers.map(server => server.name);
+            this.changeDetectorRef.detectChanges();
+        });
     }
 
     public modeSelected(): void {
@@ -82,7 +87,8 @@ export class AppComponent implements OnInit, AfterViewInit {
             this.selectedServer = null;
             this.synchronize = this.serverSyncronizeService;
         } else {
-            this.webSocketClient.setServer(this.selectedServer.name, this.selectedServer.port);
+            this.serverDiscoveryService.stop();
+            this.webSocketClient.setServer(this.selectedServer, 8080);
             this.synchronize = this.clientSyncronizeService;
         }
 
@@ -130,17 +136,41 @@ export class AppComponent implements OnInit, AfterViewInit {
     private initSynchronizeEvents(): void {
         this.synchronize.mapDeleteRecieved.subscribe(data => {
             this.selectedMap = null;
+            this.mapService.destroy();
             this.changeDetectorRef.detectChanges();
         });
         this.synchronize.mapUpdateRecieved.subscribe(data => {
             this.selectedMap = data.value;
+            this.mapService.load(this.selectedMap);
             this.changeDetectorRef.detectChanges();
         });
-        this.synchronize.scenarioMapUpdateRecieved.subscribe(update => this.selectedMap.scenarioMap = update.value);
-        this.synchronize.fogOfWarUpdateRecieved.subscribe(update => this.selectedMap.fogOfWar = update.value);
-        this.synchronize.mapWithFogOfWarUpdateRecieved.subscribe(update => this.selectedMap.mapWithFogOfWar = update.value);
-        this.synchronize.dmNotesUpdateRecieved.subscribe(update => this.selectedMap.dmNotes = update.value);
-        this.synchronize.playerNotesUpdateRecieved.subscribe(update => this.selectedMap.playerNotes = update.value);
-        this.synchronize.settingsUpdateRecieved.subscribe(update => this.selectedMap.settings = update.value);
+        this.synchronize.scenarioMapUpdateRecieved.subscribe(update => {
+            this.selectedMap.scenarioMap = update.value;
+            this.mapService.updateScenarioMap();
+        });
+        this.synchronize.fogOfWarUpdateRecieved.subscribe(update => {
+            this.selectedMap.fogOfWar = update.value;
+            this.mapService.updateFogOfWar();
+        });
+        this.synchronize.mapWithFogOfWarUpdateRecieved.subscribe(update => {
+            this.selectedMap.mapWithFogOfWar = update.value;
+            this.mapService.updateMapWithFogOfWar();
+        });
+        this.synchronize.dmNotesUpdateRecieved.subscribe(update => {
+            this.selectedMap.dmNotes = update.value;
+            this.mapService.updateDmNotes();
+        });
+        this.synchronize.playerNotesUpdateRecieved.subscribe(update => {
+            this.selectedMap.playerNotes = update.value;
+            this.mapService.updatePlayerNotes();
+        });
+        this.synchronize.settingsUpdateRecieved.subscribe(update => {
+            this.selectedMap.settings = update.value;
+            this.mapService.update(this.selectedMap);
+        });
+    }
+
+    public onNgModelChange(event: any) {
+        console.log('On ngModelChange : ', event);
     }
 }
