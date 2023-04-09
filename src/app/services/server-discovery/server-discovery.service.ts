@@ -28,7 +28,10 @@ export class ServerDiscoveryService {
     public stop(): void {
         clearInterval(this.discoveryInterval);
         this.discoveryInterval = null;
-        this.socket.close();
+        if (this.socket) {
+            this.socket.close();
+            this.socket = null;
+        }
     }
 
     get isElectron(): boolean {

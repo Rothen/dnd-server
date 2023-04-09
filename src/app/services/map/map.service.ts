@@ -6,6 +6,7 @@ import { TokenData } from '../../interfaces/token-data';
 import { Vector2d } from 'konva/lib/types';
 import { Subject } from 'rxjs';
 import { Distance } from '../../canvas/distance';
+import { MapSettingsData } from '../../interfaces/map-settings-data';
 
 @Injectable({
     providedIn: 'root'
@@ -91,30 +92,23 @@ export class MapService {
         this.tokens.forEach(token => token.draw());
     }
 
-    public update(mapData: MapData): void {
-        const newTokenDatas = this.getNewTokenDatas(mapData.settings.tokens);
-        const tokensToDelete = this.getTokensToDelete(mapData.settings.tokens);
+    public update(mapSettingsData: MapSettingsData): void {
+        const newTokenDatas = this.getNewTokenDatas(mapSettingsData.tokens);
+        const tokensToDelete = this.getTokensToDelete(mapSettingsData.tokens);
 
-        this.mapData = mapData;
+        this.mapData.settings = mapSettingsData;
 
         newTokenDatas.forEach(tokenData => {
-            const newToken = new Token(tokenData, this.mapData.settings.pixelPerUnit, this.whiteBoard, this.inDmMode);
-            newToken.onTokenChange.subscribe(token => {
-                this.onTokenChange.next(token);
-            });
-            newToken.onTokenSelect.subscribe(token => this.setSelectedToken(token.tokenData));
-            this.tokens.push(newToken);
+            console.log('new token');
+            this.addToken(tokenData);
         });
 
         tokensToDelete.forEach(token => {
-            token.destroy();
-            const tokenIndex = this.tokens.indexOf(token);
-            this.tokens.splice(tokenIndex, 1);
+            this.removeToken(token.tokenData);
         });
 
         this.mapData.settings.tokens.forEach(tokenData => this.updateToken(tokenData));
-
-        this.distances.forEach(distance => distance.draw());
+        this.updateDistances();
     }
 
     public destroy(): void {
@@ -222,6 +216,29 @@ export class MapService {
         return this.whiteBoard.playerNotesLayer.toDataURL(rec);
     }
 
+    private updateDistances(): void {
+        this.distances.forEach(distance => {
+            const tokenA = this.tokens.find(token => token.tokenData.id === distance.tokens[0].tokenData.id);
+            const tokenB = this.tokens.find(token => token.tokenData.id === distance.tokens[1].tokenData.id);
+
+            if (tokenA && tokenB) {
+                distance.tokens = [tokenA, tokenB];
+            }
+
+            distance.draw();
+
+            if (distance.tokens[0] == this.selectedToken || distance.tokens[1] == this.selectedToken) {
+                if (this.inDmMode || (!distance.tokens[0].tokenData.hide && !distance.tokens[1].tokenData.hide)) {
+                    distance.lineGroup.show();
+                } else {
+                    distance.lineGroup.hide();
+                }
+            } else {
+                distance.lineGroup.hide();
+            }
+        });
+    }
+
     private updateLayerVisibility(): void {
         if (this.inDmMode) {
             this.whiteBoard.mapWithFogOfWarLayer.hide();
@@ -270,14 +287,14 @@ export class MapService {
         const newToken = new Token(tokenData, this.mapData.settings.pixelPerUnit, this.whiteBoard, this.inDmMode);
         newToken.onTokenChange.subscribe(token => {
             this.onTokenChange.next(token);
-            this.distances.forEach(distance => distance.draw());
+            this.updateDistances();
         });
         newToken.onTokenSelect.subscribe(token => this.setSelectedToken(token.tokenData));
         newToken.draw();
         this.tokens.forEach(token => {
             const distance = new Distance([newToken, token], this.mapData.settings.pixelPerUnit, this.whiteBoard, this.inDmMode);
-            distance.draw();
             this.distances.push(distance);
+            this.updateDistances();
         });
         this.tokens.push(newToken);
     }
@@ -288,6 +305,18 @@ export class MapService {
         if (foundTokenIndes >= 0) {
             this.tokens[foundTokenIndes].destroy();
             this.tokens.splice(foundTokenIndes, 1);
+
+            const distancesToKeep: Distance[] = [];
+
+            this.distances.forEach(distance => {
+                if (distance.tokens[0].tokenData.id === tokenData.id || distance.tokens[1].tokenData.id === tokenData.id) {
+                    distance.destroy();
+                } else {
+                    distancesToKeep.push(distance);
+                }
+            });
+
+            this.distances = distancesToKeep;
         }
     }
 }

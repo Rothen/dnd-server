@@ -36,6 +36,10 @@ export class Distance {
         this.updateDrawing(left, right, dist, height);
     }
 
+    public destroy(): void {
+        this.lineGroup.destroy();
+    }
+
     private updateDrawing(left: Vector2d, right: Vector2d, dist: number, height: number): void {
         const distInFeet = dist / this.pixelPerUnit * 5;
         const distInMeter = distInFeet * 0.3048;

@@ -61,7 +61,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     public ngOnInit() {
         this.maps = this.storageService.listMaps();
         this.webSocketServer.clientConnectedSubject.subscribe(
-            client => this.webSocketServer.updateClient(client, this.selectedMap)
+            client => (this.mapService.mapData) ? this.synchronize.updateMap(this.mapService.mapData) : null
         );
         this.mapService.onTokenChange.subscribe(
             token => this.synchronize.updateSettings(this.mapService.mapData.name, this.mapService.mapData.settings)
@@ -82,12 +82,12 @@ export class AppComponent implements OnInit, AfterViewInit {
         if (this.synchronize) {
             this.synchronize.stopSynchronizing();
         }
+        this.serverDiscoveryService.stop();
 
         if (this.inDmMode) {
             this.selectedServer = null;
             this.synchronize = this.serverSyncronizeService;
         } else {
-            this.serverDiscoveryService.stop();
             this.webSocketClient.setServer(this.selectedServer, 8080);
             this.synchronize = this.clientSyncronizeService;
         }
@@ -129,7 +129,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     }
 
     public updateTokens(): void {
-        this.mapService.update(this.selectedMap);
+        // this.mapService.update(this.selectedMap);
         this.synchronize.updateSettings(this.selectedMap.name, this.selectedMap.settings);
     }
 
@@ -165,8 +165,7 @@ export class AppComponent implements OnInit, AfterViewInit {
             this.mapService.updatePlayerNotes();
         });
         this.synchronize.settingsUpdateRecieved.subscribe(update => {
-            this.selectedMap.settings = update.value;
-            this.mapService.update(this.selectedMap);
+            this.mapService.update(update.value);
         });
     }
 
