@@ -13,6 +13,8 @@ import { ServerSynchronizeService } from './services/synchronize/server-synchron
 import { Synchronize } from './services/synchronize/synchronize';
 import { ClientSynchronizeService } from './services/synchronize/client-synchronize.service';
 import { MapService } from './services/map/map.service';
+import { ServerDiscoveryService } from './services/server-discovery/server-discovery.service';
+import { WebSocketService } from './services/web-socket/web-socket.service';
 
 interface DialogResult {
     name: string;
@@ -38,6 +40,8 @@ export class AppComponent implements OnInit, AfterViewInit {
     public paintMode = 'paint';
     public synchronize: Synchronize;
     public inDmMode: boolean;
+    public servers: { name: string, port: number }[] = [];
+    public selectedServer: { name: string, port: number };
 
     constructor(
         private storageService: StorageService,
@@ -47,11 +51,14 @@ export class AppComponent implements OnInit, AfterViewInit {
         public dialog: MatDialog,
         private mapDataService: MapDataService,
         private mapService: MapService,
-        private webSocketServer: WebSocketServerService
+        private webSocketServer: WebSocketServerService,
+        private webSocketClient: WebSocketService,
+        private serverDiscoveryService: ServerDiscoveryService
     ) { }
 
     public ngOnInit() {
         this.maps = this.storageService.listMaps();
+        this.serverDiscoveryService.onDiscovered.subscribe(servers => this.servers = servers);
         this.webSocketServer.clientConnectedSubject.subscribe(
             client => this.webSocketServer.updateClient(client, this.selectedMap)
         );
@@ -72,8 +79,10 @@ export class AppComponent implements OnInit, AfterViewInit {
         }
 
         if (this.inDmMode) {
+            this.selectedServer = null;
             this.synchronize = this.serverSyncronizeService;
         } else {
+            this.webSocketClient.setServer(this.selectedServer.name, this.selectedServer.port);
             this.synchronize = this.clientSyncronizeService;
         }
 

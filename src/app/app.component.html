@@ -7,12 +7,22 @@
 <div class="overlay" [ngStyle]="{'display': (inDmMode === null || inDmMode === undefined) ? 'block' : 'none'}">
     <mat-card style="position: fixed; width: 280px; left: 50%; top: 50%;transform: translate(-50%, -50%);">
         <mat-card-header>
-            <mat-card-title style="color: white;">Select Mode</mat-card-title>
+            <mat-card-title style="color: white;">Join Campaign</mat-card-title>
         </mat-card-header>
-        <mat-card-content style="display: flex; justify-content: space-between;">
-            <button mat-raised-button color="primary" (click)="inDmMode = true;modeSelected()">DM Mode</button>
-            <button mat-raised-button color="primary" (click)="inDmMode = false;modeSelected()">Player Mode</button>
+        <mat-card-content style="display: flex; justify-content: space-between; height: 200px;">
+            <mat-selection-list #shoes [multiple]="false" [ngModel]="selectedServer">
+                <mat-list-option *ngFor="let server of servers" [value]="server">
+                    {{server.name}}
+                </mat-list-option>
+            </mat-selection-list>
+            <div style="height: 35px; width: 100%; display: flex; justify-content: center; color: white; align-items: center;">
+                <mat-spinner style="margin-right: 10px;" [diameter]="30" color="accent"></mat-spinner> Looking for Campaigns
+            </div>
         </mat-card-content>
+        <mat-card-actions>
+            <button mat-button (click)="inDmMode = false;modeSelected()" [disabled]="!selectedServer">Join</button>
+            <button mat-button color="accent" (click)="inDmMode = true;modeSelected()">Start as DM</button>
+        </mat-card-actions>
     </mat-card>
 </div>
 
