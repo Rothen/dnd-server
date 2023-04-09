@@ -5,6 +5,7 @@ import { Token } from '../../canvas/token';
 import { TokenData } from '../../interfaces/token-data';
 import { Vector2d } from 'konva/lib/types';
 import { Subject } from 'rxjs';
+import { Distance } from '../../canvas/distance';
 
 @Injectable({
     providedIn: 'root'
@@ -12,6 +13,7 @@ import { Subject } from 'rxjs';
 export class MapService {
     public mapData: MapData;
     public tokens: Token[];
+    public distances: Distance[];
     public whiteBoard: WhiteBoard;
     public inDmMode: boolean;
 
@@ -21,6 +23,15 @@ export class MapService {
     public selectedToken: Token;
 
     constructor() { }
+
+    public setWhiteBoard(whiteBoard: WhiteBoard): void {
+        this.whiteBoard = whiteBoard;
+    }
+
+    public setInDmMode(inDmMode: boolean): void {
+        this.inDmMode = inDmMode;
+        this.updateLayerVisibility();
+    }
 
     public setSelectedToken(tokenData: TokenData): void {
         if (tokenData) {
@@ -34,37 +45,29 @@ export class MapService {
             this.selectedToken = null;
         }
 
-        this.onTokenSelect.next(this.selectedToken);
-    }
-
-    public setWhiteBoard(whiteBoard: WhiteBoard): void {
-        this.whiteBoard = whiteBoard;
-    }
-
-    public setInDmMode(inDmMode: boolean): void {
-        this.inDmMode = inDmMode;
-        this.updateLayerVisibility();
-    }
-
-    private updateLayerVisibility(): void {
-        if (this.inDmMode) {
-            this.whiteBoard.mapWithFogOfWarLayer.hide();
-            this.whiteBoard.backLayer.show();
-            this.whiteBoard.fogOfWarLayer.show();
-            this.whiteBoard.mapLayer.show();
-            this.whiteBoard.dmNotesLayer.show();
+        if (this.selectedToken) {
+            this.distances.forEach(distance => {
+                if (distance.tokens[0] == this.selectedToken || distance.tokens[1] == this.selectedToken) {
+                    if (this.inDmMode || (!distance.tokens[0].tokenData.hide && !distance.tokens[1].tokenData.hide)) {
+                        distance.lineGroup.show();
+                    } else {
+                        distance.lineGroup.hide();
+                    }
+                } else {
+                    distance.lineGroup.hide();
+                }
+            });
         } else {
-            this.whiteBoard.mapWithFogOfWarLayer.show();
-            this.whiteBoard.backLayer.hide();
-            this.whiteBoard.fogOfWarLayer.hide();
-            this.whiteBoard.mapLayer.hide();
-            this.whiteBoard.dmNotesLayer.hide();
+            this.distances.forEach(distance => distance.lineGroup.hide());
         }
+
+        this.onTokenSelect.next(this.selectedToken);
     }
 
     public load(mapData: MapData): void {
         this.mapData = mapData;
         this.tokens = [];
+        this.distances = [];
 
         this.whiteBoard.reset(true);
         this.whiteBoard.stage.absolutePosition({
@@ -96,8 +99,10 @@ export class MapService {
 
         newTokenDatas.forEach(tokenData => {
             const newToken = new Token(tokenData, this.mapData.settings.pixelPerUnit, this.whiteBoard, this.inDmMode);
-            newToken.onTokenChange.subscribe(token => this.onTokenChange.next(token));
-            newToken.onTokenSelect.subscribe(token => this.onTokenSelect.next(token));
+            newToken.onTokenChange.subscribe(token => {
+                this.onTokenChange.next(token);
+            });
+            newToken.onTokenSelect.subscribe(token => this.setSelectedToken(token.tokenData));
             this.tokens.push(newToken);
         });
 
@@ -108,34 +113,6 @@ export class MapService {
         });
 
         this.mapData.settings.tokens.forEach(tokenData => this.updateToken(tokenData));
-    }
-
-    private getNewTokenDatas(tokenDatas: TokenData[]): TokenData[] {
-        const newTokenData: TokenData[] = [];
-
-        for (const tokenData of tokenDatas) {
-            const foundToken = this.tokens.find(token => token.tokenData.id === tokenData.id);
-
-            if (!foundToken) {
-                newTokenData.push(tokenData);
-            }
-        }
-
-        return newTokenData;
-    }
-
-    private getTokensToDelete(tokenDatas: TokenData[]): Token[] {
-        const tokensToDelete: Token[] = [];
-
-        for (const token of this.tokens) {
-            const foundTokenData = tokenDatas.find(tokenData => tokenData.id === token.tokenData.id);
-
-            if (!foundTokenData) {
-                tokensToDelete.push(token);
-            }
-        }
-
-        return tokensToDelete;
     }
 
     public destroy(): void {
@@ -169,23 +146,6 @@ export class MapService {
         if (index >= 0) {
             this.mapData.settings.tokens.splice(index, 1);
             this.removeToken(tokenData);
-        }
-    }
-
-    private addToken(tokenData: TokenData): void {
-        const newToken = new Token(tokenData, this.mapData.settings.pixelPerUnit, this.whiteBoard, this.inDmMode);
-        newToken.onTokenChange.subscribe(token => this.onTokenChange.next(token));
-        newToken.onTokenSelect.subscribe(token => this.onTokenSelect.next(token));
-        newToken.draw();
-        this.tokens.push(newToken);
-    }
-
-    private removeToken(tokenData: TokenData): void {
-        const foundTokenIndes = this.tokens.findIndex(token => token.tokenData.id === tokenData.id);
-
-        if (foundTokenIndes >= 0) {
-            this.tokens[foundTokenIndes].destroy();
-            this.tokens.splice(foundTokenIndes, 1);
         }
     }
 
@@ -258,5 +218,74 @@ export class MapService {
             pixelRatio: 1 / scale.y
         };
         return this.whiteBoard.playerNotesLayer.toDataURL(rec);
+    }
+
+    private updateLayerVisibility(): void {
+        if (this.inDmMode) {
+            this.whiteBoard.mapWithFogOfWarLayer.hide();
+            this.whiteBoard.backLayer.show();
+            this.whiteBoard.fogOfWarLayer.show();
+            this.whiteBoard.mapLayer.show();
+            this.whiteBoard.dmNotesLayer.show();
+        } else {
+            this.whiteBoard.mapWithFogOfWarLayer.show();
+            this.whiteBoard.backLayer.hide();
+            this.whiteBoard.fogOfWarLayer.hide();
+            this.whiteBoard.mapLayer.hide();
+            this.whiteBoard.dmNotesLayer.hide();
+        }
+    }
+
+    private getNewTokenDatas(tokenDatas: TokenData[]): TokenData[] {
+        const newTokenData: TokenData[] = [];
+
+        for (const tokenData of tokenDatas) {
+            const foundToken = this.tokens.find(token => token.tokenData.id === tokenData.id);
+
+            if (!foundToken) {
+                newTokenData.push(tokenData);
+            }
+        }
+
+        return newTokenData;
+    }
+
+    private getTokensToDelete(tokenDatas: TokenData[]): Token[] {
+        const tokensToDelete: Token[] = [];
+
+        for (const token of this.tokens) {
+            const foundTokenData = tokenDatas.find(tokenData => tokenData.id === token.tokenData.id);
+
+            if (!foundTokenData) {
+                tokensToDelete.push(token);
+            }
+        }
+
+        return tokensToDelete;
+    }
+
+    private addToken(tokenData: TokenData): void {
+        const newToken = new Token(tokenData, this.mapData.settings.pixelPerUnit, this.whiteBoard, this.inDmMode);
+        newToken.onTokenChange.subscribe(token => {
+            this.onTokenChange.next(token);
+            this.distances.forEach(distance => distance.draw());
+        });
+        newToken.onTokenSelect.subscribe(token => this.setSelectedToken(token.tokenData));
+        newToken.draw();
+        this.tokens.forEach(token => {
+            const distance = new Distance([newToken, token], this.mapData.settings.pixelPerUnit, this.whiteBoard, this.inDmMode);
+            distance.draw();
+            this.distances.push(distance);
+        });
+        this.tokens.push(newToken);
+    }
+
+    private removeToken(tokenData: TokenData): void {
+        const foundTokenIndes = this.tokens.findIndex(token => token.tokenData.id === tokenData.id);
+
+        if (foundTokenIndes >= 0) {
+            this.tokens[foundTokenIndes].destroy();
+            this.tokens.splice(foundTokenIndes, 1);
+        }
     }
 }

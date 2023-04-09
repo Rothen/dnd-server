@@ -10,7 +10,10 @@ export class Distance {
     public inDmMode: boolean;
     
     private isDrawen: boolean = false;
-    private lineGroup: Konva.Group;
+    public lineGroup: Konva.Group;
+    private distanceLine: Konva.Line;
+    private distanceTextM: Konva.Text;
+    private distanceTextFt: Konva.Text;
 
     constructor(tokens: Token[], pixelPerUnit: number, whiteBoard: WhiteBoard, inDmMode: boolean) {
         this.tokens = tokens;
@@ -19,25 +22,47 @@ export class Distance {
         this.inDmMode = inDmMode;
     }
 
-    private updateDrawing(): void {
-
-    }
-
-    public draw(from: Vector2d, to: Vector2d, pixelPerUnit: number): void {
-        if (!this.isDrawen) {
-            this.createDrawing();
-        }
-
-        this.updateDrawing();
-    }
-
-    private createDrawing(): void {
+    public draw(): void {
+        const dist = Math.sqrt(Math.pow(this.tokens[0].getPosition().x - this.tokens[1].getPosition().x, 2) + Math.pow(this.tokens[0].getPosition().y - this.tokens[1].getPosition().y, 2));
         const left = (this.tokens[0].getPosition().x < this.tokens[1].getPosition().x) ? this.tokens[0].getPosition() : this.tokens[1].getPosition();
         const right = (this.tokens[0].getPosition().x >= this.tokens[1].getPosition().x) ? this.tokens[0].getPosition() : this.tokens[1].getPosition();
-        const dist = Math.sqrt(Math.pow(this.tokens[0].getPosition().x - this.tokens[1].getPosition().x, 2) + Math.pow(this.tokens[0].getPosition().y - this.tokens[1].getPosition().y, 2));
+        const height = 40;
+
+        if (!this.isDrawen) {
+            this.createDrawing(left, right, dist, height);
+            this.isDrawen = true;
+        }
+
+        this.updateDrawing(left, right, dist, height);
+    }
+
+    private updateDrawing(left: Vector2d, right: Vector2d, dist: number, height: number): void {
         const distInFeet = dist / this.pixelPerUnit * 5;
         const distInMeter = distInFeet * 0.3048;
-        const height = 40;
+
+        /*if (this.inDmMode || (!this.tokens[0].tokenData.hide && !this.tokens[1].tokenData.hide)) {
+            this.lineGroup.show();
+        } else {
+            this.lineGroup.hide();
+        }*/
+
+        this.lineGroup.x(left.x);
+        this.lineGroup.y(left.y - height / 2);
+        this.lineGroup.width(dist);
+
+        this.distanceLine.points([0, height / 2, dist, height / 2]);
+
+        this.distanceTextM.text(`${distInMeter.toFixed(2)}m`);
+        this.distanceTextM.width(dist);
+        this.distanceTextFt.text(`${distInFeet.toFixed(2)}ft`);
+        this.distanceTextFt.width(dist);
+
+        this.rotateAroundPoint(this.lineGroup, this.getRotation(left, right, dist), left);
+    }
+
+    private createDrawing(left: Vector2d, right: Vector2d, dist: number, height: number): void {
+        const distInFeet = dist / this.pixelPerUnit * 5;
+        const distInMeter = distInFeet * 0.3048;
         const fontSize = 16;
         const textOffset = 5;
 
@@ -47,11 +72,14 @@ export class Distance {
             width: dist,
             height
         });
-        this.lineGroup.add(new Konva.Line({
+        this.lineGroup.hide();
+
+        this.distanceLine = new Konva.Line({
             points: [0, height / 2, dist, height / 2],
             stroke: 'black'
-        }));
-        this.lineGroup.add(new Konva.Text({
+        });
+
+        this.distanceTextM = new Konva.Text({
             fontStyle: 'bold',
             text: `${distInMeter.toFixed(2)}m`,
             fontSize,
@@ -62,8 +90,9 @@ export class Distance {
             fillAfterStrokeEnabled: true,
             stroke: 'black',
             fill: 'white'
-        }));
-        this.lineGroup.add(new Konva.Text({
+        });
+
+        this.distanceTextFt = new Konva.Text({
             fontStyle: 'bold',
             text: `${distInFeet.toFixed(2)}ft`,
             fontSize,
@@ -75,16 +104,14 @@ export class Distance {
             fillAfterStrokeEnabled: true,
             stroke: 'black',
             fill: 'white'
-        }));
+        });
 
-        this.rotateAroundPoint(this.lineGroup, this.getRotation(left, right, dist), left);
+        this.lineGroup.add(this.distanceLine);
+        this.lineGroup.add(this.distanceTextM);
+        this.lineGroup.add(this.distanceTextFt);
+
         this.whiteBoard.pointerLayer.add(this.lineGroup);
-
-        if (this.inDmMode || (!this.tokens[0].tokenData.hide && !this.tokens[1].tokenData.hide)) {
-            this.lineGroup.show();
-        } else {
-            this.lineGroup.hide();
-        }
+        this.lineGroup.zIndex(0);
     }
 
     private getRotation(left: Vector2d, right: Vector2d, dist: number): number {
@@ -118,6 +145,6 @@ export class Distance {
         shape.position({ x, y });
 
         // rotate the shape in place around its natural rotation point
-        shape.rotation(shape.rotation() + angleDegrees);
+        shape.rotation(angleDegrees);
     }
 }
