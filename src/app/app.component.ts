@@ -1,17 +1,18 @@
-import { Component, ViewChild, ChangeDetectorRef, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, ViewChild, ChangeDetectorRef, OnInit, AfterViewInit } from '@angular/core';
 import { first } from 'rxjs';
 import { StorageService } from './services/storage/storage.service';
-import { Map } from './interfaces/map';
+import { MapData } from './interfaces/map-data';
 import { MatDialog } from '@angular/material/dialog';
 import { UploadDialogComponent } from './upload-dialog/upload-dialog.component';
 import { ControlsComponent } from './controls/controls.component';
-import { Token } from './interfaces/token';
+import { TokenData } from './interfaces/token-data';
 import { WhiteboardComponent } from './whiteboard/whiteboard.component';
-import { MapService } from './services/map/map.service';
+import { MapDataService } from './services/map-data/map-data.service';
 import { WebSocketServerService } from './services/web-socket-server/web-socket-server.service';
 import { ServerSynchronizeService } from './services/synchronize/server-synchronize.service';
 import { Synchronize } from './services/synchronize/synchronize';
 import { ClientSynchronizeService } from './services/synchronize/client-synchronize.service';
+import { MapService } from './services/map/map.service';
 
 interface DialogResult {
     name: string;
@@ -25,14 +26,14 @@ interface DialogResult {
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, AfterViewInit {
     @ViewChild(WhiteboardComponent) whiteBoardComponent: WhiteboardComponent;
     @ViewChild(ControlsComponent) controlsComponent: ControlsComponent;
 
     public title = 'dnd';
-    public maps: Map[];
-    public selectedMap: Map;
-    public selectedToken: Token;
+    public maps: MapData[];
+    public selectedMap: MapData;
+    public selectedToken: TokenData;
     public showOverlay = false;
     public paintMode = 'paint';
     public synchronize: Synchronize;
@@ -44,16 +45,28 @@ export class AppComponent implements OnInit {
         public clientSyncronizeService: ClientSynchronizeService,
         private changeDetectorRef: ChangeDetectorRef,
         public dialog: MatDialog,
+        private mapDataService: MapDataService,
         private mapService: MapService,
         private webSocketServer: WebSocketServerService
     ) { }
 
     public ngOnInit() {
         this.maps = this.storageService.listMaps();
-        this.webSocketServer.clientConnectedSubject.subscribe(client => this.webSocketServer.updateClient(client, this.selectedMap));
+        this.webSocketServer.clientConnectedSubject.subscribe(
+            client => this.webSocketServer.updateClient(client, this.selectedMap)
+        );
+        this.mapService.onTokenChange.subscribe(
+            token => this.synchronize.updateSettings(this.mapService.mapData.name, this.mapService.mapData.settings)
+        );
+    }
+
+    public ngAfterViewInit(): void {
+        this.mapService.setWhiteBoard(this.whiteBoardComponent.whiteBoard);
     }
 
     public modeSelected(): void {
+        this.mapService.setInDmMode(this.inDmMode);
+
         if (this.synchronize) {
             this.synchronize.stopSynchronizing();
         }
@@ -69,6 +82,7 @@ export class AppComponent implements OnInit {
     }
 
     public onMapSelectionChange(): void {
+        this.mapService.load(this.selectedMap);
         this.synchronize.updateMap(this.selectedMap);
     }
 
@@ -82,36 +96,33 @@ export class AppComponent implements OnInit {
                 return;
             }
 
-            this.mapService.createMap(result.map, result.name, result.pixelPerUnit).pipe(first()).subscribe(addedMap => {
+            this.mapDataService.createMap(result.map, result.name, result.pixelPerUnit).pipe(first()).subscribe(addedMap => {
                 this.storageService.storeMap(addedMap);
                 this.maps = this.storageService.listMaps();
                 this.selectedMap = this.maps.find(map => map.settings.id === addedMap.settings.id);
-                this.controlsComponent.hideList = true;
+                this.mapService.load(this.selectedMap);
                 this.synchronize.updateMap(this.selectedMap);
             });
         });
     }
 
-    public deleteMap(map: Map): void {
+    public deleteMap(map: MapData): void {
         this.storageService.deleteMap(map);
+        this.mapService.destroy();
         this.maps = this.storageService.listMaps();
         this.selectedMap = null;
     }
 
     public updateTokens(): void {
-        this.whiteBoardComponent.ngOnChanges({
-            tokens: {
-                previousValue: this.selectedMap.settings.tokens,
-                currentValue: this.selectedMap.settings.tokens,
-                firstChange: false,
-                isFirstChange: () => false
-            }
-        });
-
+        this.mapService.update(this.selectedMap);
         this.synchronize.updateSettings(this.selectedMap.name, this.selectedMap.settings);
     }
 
     private initSynchronizeEvents(): void {
+        this.synchronize.mapDeleteRecieved.subscribe(data => {
+            this.selectedMap = null;
+            this.changeDetectorRef.detectChanges();
+        });
         this.synchronize.mapUpdateRecieved.subscribe(data => {
             this.selectedMap = data.value;
             this.changeDetectorRef.detectChanges();

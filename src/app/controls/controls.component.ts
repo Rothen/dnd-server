@@ -1,88 +1,76 @@
-import { Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
-import { Map } from '../interfaces/map';
-import { MatSelectionListChange } from '@angular/material/list';
-import { Token } from '../interfaces/token';
+import { Component, EventEmitter, Input, Output, ViewChild, OnInit } from '@angular/core';
+import { MapData } from '../interfaces/map-data';
+import { TokenData } from '../interfaces/token-data';
 import { MatTable } from '@angular/material/table';
-import { MapService } from '../services/map/map.service';
+import { MapDataService } from '../services/map-data/map-data.service';
 import { Synchronize } from '../services/synchronize/synchronize';
+import { MapService } from '../services/map/map.service';
 
 @Component({
     selector: 'app-controls',
     templateUrl: './controls.component.html',
     styleUrls: ['./controls.component.scss']
 })
-export class ControlsComponent {
+export class ControlsComponent implements OnInit {
     @ViewChild(MatTable) tokensTable: MatTable<any>;
 
-    @Input() inDmMode: boolean;
-    @Input() selectedMap: Map;
-    @Input() maps: Map[];
-    @Input() selectedToken: Token;
-    @Input() mode: string;
-    @Input() paintMode: string;
+    @Input() synchronize: Synchronize;
+    @Input() maps: MapData[];
 
-    @Output() selectedMapChange = new EventEmitter<Map>();
-    @Output() selectedTokenChange = new EventEmitter<Token>();
     @Output() uploadMap = new EventEmitter<void>();
-    @Output() paintModeChange = new EventEmitter<string>();
-    @Output() deleteMap = new EventEmitter<Map>();
-    @Output() tokensUpdated = new EventEmitter<void>();
+    @Output() deleteMap = new EventEmitter<MapData>();
 
-    public hideList = false;
-    public displayedColumns: string[] = ['name', 'type', 'size'];
+    public selectedToken: TokenData;
 
-    constructor(private mapServcie: MapService) {}
+    constructor(
+        private mapDataServcie: MapDataService,
+        public mapService: MapService
+        ) {}
 
-    public onMapChange(event: MatSelectionListChange): void {
-        this.setSelectedToken(null);
-        this.selectedMap = event.options[0].value;
-        this.selectedMapChange.next(this.selectedMap);
-        this.hideList = true;
+    public ngOnInit(): void {
+        this.mapService.onTokenSelect.subscribe(token => {
+            if (token) {
+                this.selectedToken = token.tokenData;
+            } else {
+                this.selectedToken = null;
+            }
+        });
     }
 
     public addToken(type: 'player' | 'npc' | 'enemy'): void {
-        if (this.selectedMap) {
-            const token = this.mapServcie.addToken(this.selectedMap, type);
-
-            this.tokensUpdated.next();
-
-            this.setSelectedToken(token);
+        if (this.mapService.mapData) {
+            const token = this.mapDataServcie.createToken(type);
+            this.mapService.addTokenToMap(token);
+            this.synchronize.updateSettings(this.mapService.mapData.name, this.mapService.mapData.settings);
+            this.mapService.setSelectedToken(token);
         }
     }
 
-    public deleteToken(token: Token): void {
-        if (this.selectedMap) {
-            const index = this.selectedMap.settings.tokens.indexOf(token);
+    public deleteToken(tokenToDelete: TokenData): void {
+        if (this.mapService.mapData) {
+            this.mapService.removeTokenFromMap(tokenToDelete);
 
-            if (index >= 0) {
-                this.selectedMap.settings.tokens.splice(index, 1);
-                this.tokensUpdated.next();
+            this.synchronize.updateSettings(this.mapService.mapData.name, this.mapService.mapData.settings);
 
-                if (this.selectedToken === token) {
-                    this.setSelectedToken(null);
-                }
+            if (this.selectedToken === tokenToDelete) {
+                this.mapService.setSelectedToken(null);
             }
         }
     }
 
     public deleteMapClick(): void {
-        if (this.selectedMap) {
-            this.hideList = false;
-            this.deleteMap.next(this.selectedMap);
+        if (this.mapService.mapData) {
+            this.deleteMap.next(this.mapService.mapData);
         }
     }
 
-    public paintModeChanged(): void {
-
+    public tokenChanged(): void {
+        this.mapService.updateToken(this.selectedToken);
+        this.synchronize.updateSettings(this.mapService.mapData.name, this.mapService.mapData.settings);
     }
 
-    public setSelectedMap(map: Map): void {
-        this.selectedMap = map;
-        this.selectedMapChange.next(this.selectedMap);
-    }
-
-    public setSelectedToken(token: Token): void {
-        this.selectedToken = token;
-        this.selectedTokenChange.next(this.selectedToken);
+    public setSelectedMap(map: MapData): void {
+        this.mapService.load(map);
+        this.synchronize.updateMap(map);
     }
 }

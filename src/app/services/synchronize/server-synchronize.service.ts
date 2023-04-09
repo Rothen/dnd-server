@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Map } from '../../interfaces/map';
-import { MapSettings } from '../../interfaces/map-settings';
+import { MapData } from '../../interfaces/map-data';
+import { MapSettingsData } from '../../interfaces/map-settings-data';
 import { Synchronize } from './synchronize';
 import { StorageService } from '../storage/storage.service';
 import { WebSocketServerService } from '../web-socket-server/web-socket-server.service';
@@ -40,7 +40,16 @@ export class ServerSynchronizeService extends Synchronize {
         this.webSocketServerService.stop();
     }
 
-    public updateMap(map: Map): void {
+    public deleteMap(map: MapData): void {
+        this.storageService.deleteMap(map);
+        this.webSocketServerService.updateClients({
+            mapName: map.name,
+            update: 'map_delte',
+            value: map
+        });
+    }
+
+    public updateMap(map: MapData): void {
         this.storageService.storeMap(map);
         this.webSocketServerService.updateClients({
             mapName: map.name,
@@ -94,7 +103,7 @@ export class ServerSynchronizeService extends Synchronize {
         });
     }
 
-    public updateSettings(mapName: string, mapSettings: MapSettings): void {
+    public updateSettings(mapName: string, mapSettings: MapSettingsData): void {
         this.storageService.storeSettingsFile(mapName, mapSettings);
         this.webSocketServerService.updateClients({
             mapName,

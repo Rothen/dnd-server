@@ -3,8 +3,8 @@ import * as fs from 'fs';
 import * as path from 'node:path';
 import { ipcRenderer } from 'electron';
 import { APP_CONFIG } from '../../../environments/environment';
-import { Map } from '../../interfaces/map';
-import { MapSettings } from '../../interfaces/map-settings';
+import { MapData } from '../../interfaces/map-data';
+import { MapSettingsData } from '../../interfaces/map-settings-data';
 
 @Injectable({
     providedIn: 'root'
@@ -24,6 +24,7 @@ export class StorageService {
             this.ipcRenderer = window.require('electron').ipcRenderer;
 
             this.userDataPath = this.ipcRenderer.sendSync('userDataPath');
+            console.log(this.userDataPath);
 
             if (this.userDataPath && typeof this.userDataPath === 'string') {
                 this.mapsPath = this.path.join(this.userDataPath, APP_CONFIG.mapsFolderPath);
@@ -39,7 +40,7 @@ export class StorageService {
         return !!(window && window.process && window.process.type);
     }
 
-    public listMaps(): Map[] {
+    public listMaps(): MapData[] {
         if (!this.userDataPath && typeof this.userDataPath === 'string') {
             return [];
         }
@@ -52,7 +53,7 @@ export class StorageService {
         }
     }
 
-    public loadMap(name: string): Map {
+    public loadMap(name: string): MapData {
         if (this.isElectron) {
             const mapFolderPath = this.path.join(this.mapsPath, name);
             if (this.fs.existsSync(mapFolderPath)) {
@@ -71,14 +72,14 @@ export class StorageService {
         }
     }
 
-    public deleteMap(map: Map): void {
+    public deleteMap(map: MapData): void {
         const mapPath = this.path.join(this.mapsPath, map.name);
         if (this.fs.existsSync(mapPath)) {
             this.fs.rmdirSync(mapPath, { recursive: true });
         }
     }
 
-    public storeMap(map: Map): Map {
+    public storeMap(map: MapData): MapData {
         if (this.isElectron) {
             const mapFolderPath = this.path.join(this.mapsPath, map.name);
             if (!this.fs.existsSync(mapFolderPath)) {
@@ -116,7 +117,7 @@ export class StorageService {
         return this.readPng(this.path.join(mapFolderPath, APP_CONFIG.playerNotesPath));
     }
 
-    public loadSettingsFile(mapFolderPath: string): MapSettings {
+    public loadSettingsFile(mapFolderPath: string): MapSettingsData {
         const settings = JSON.parse(this.fs.readFileSync(this.path.join(mapFolderPath, APP_CONFIG.settingsPath)).toString());
         return settings;
     }
@@ -141,7 +142,7 @@ export class StorageService {
         this.writePng(this.path.join(this.mapsPath, mapPath, APP_CONFIG.playerNotesPath), playerNotes);
     }
 
-    public storeSettingsFile(mapPath: string, settings: MapSettings): void {
+    public storeSettingsFile(mapPath: string, settings: MapSettingsData): void {
         this.fs.writeFileSync(this.path.join(this.mapsPath, mapPath, APP_CONFIG.settingsPath), JSON.stringify(settings));
     }
 

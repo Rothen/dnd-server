@@ -1,8 +1,6 @@
-<app-whiteboard *ngIf="inDmMode !== null && inDmMode !== undefined"
-    [selectedMap]="selectedMap"
+<app-whiteboard
     [(selectedToken)]="selectedToken"
     (selectedMapChange)="onMapSelectionChange()"
-    [inDmMode]="inDmMode"
     [synchronize]="synchronize">
 </app-whiteboard>
 
@@ -18,14 +16,9 @@
     </mat-card>
 </div>
 
-<app-controls *ngIf="inDmMode !== null && inDmMode !== undefined"
-    [(selectedMap)]="selectedMap"
-    (selectedMapChange)="onMapSelectionChange()"
-    [(paintMode)]="paintMode"
+<app-controls
     [maps]="maps"
     (uploadMap)="uploadMap()"
     (deleteMap)="deleteMap($event)"
-    (tokensUpdated)="updateTokens()"
-    [(selectedToken)]="selectedToken"
-    [inDmMode]="inDmMode">
+    [synchronize]="synchronize">
 </app-controls>

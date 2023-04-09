@@ -1,7 +1,7 @@
 <div id='white-board' #whiteBoard tabindex="0"></div>
 
 
-<div *ngIf="selectedMap && selectedPaintMode && selectedPenSize" class="menu mat-elevation-z8">
+<div *ngIf="selectedPaintMode && selectedPenSize" class="menu mat-elevation-z8">
     <button mat-icon-button color="primary" [matMenuTriggerFor]="paintMenu" [matTooltip]="'Mode: ' + selectedPaintMode.name" matTooltipPosition="right">
         <mat-icon class="{{selectedPenSize?.iconClass}}">{{selectedPaintMode.icon}}</mat-icon>
     </button>

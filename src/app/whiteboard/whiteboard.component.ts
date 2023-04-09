@@ -1,29 +1,28 @@
 import { Component, ElementRef, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { Map } from '../interfaces/map';
+import { MapData } from '../interfaces/map-data';
 import { DrawService } from '../services/draw/draw.service';
 import { fromEvent } from 'rxjs';
-import { Token } from '../interfaces/token';
+import { TokenData } from '../interfaces/token-data';
 import { MenuItem } from '../interfaces/menu-item';
 import { Synchronize } from '../services/synchronize/synchronize';
 import { HUGE, LARGE, MEDIUM, SMALL } from '../helpers/pen-size';
 import { WhiteBoard } from '../helpers/white-board';
 import { Drawer, FogDrawer, FogEraser } from '../helpers/drawer';
+import { MapService } from '../services/map/map.service';
 
 @Component({
     selector: 'app-whiteboard',
     templateUrl: './whiteboard.component.html',
     styleUrls: ['./whiteboard.component.scss']
 })
-export class WhiteboardComponent implements OnInit, OnChanges {
+export class WhiteboardComponent implements OnInit {
     @ViewChild('whiteBoard') whiteBoardRef: ElementRef;
 
-    @Input() inDmMode: boolean;
     @Input() synchronize: Synchronize;
-    @Input() selectedMap: Map;
-    @Input() selectedToken: Token;
+    @Input() selectedToken: TokenData;
 
-    @Output() selectedTokenChange: EventEmitter<Token> = new EventEmitter();
-    @Output() selectedMapChange: EventEmitter<Map> = new EventEmitter();
+    @Output() selectedTokenChange: EventEmitter<TokenData> = new EventEmitter();
+    @Output() selectedMapChange: EventEmitter<MapData> = new EventEmitter();
     @Output() tokensChange: EventEmitter<void> = new EventEmitter();
 
     public selectedPaintMode: Drawer;
@@ -37,38 +36,19 @@ export class WhiteboardComponent implements OnInit, OnChanges {
         HUGE
     ];
 
-    private whiteBoard: WhiteBoard;
+    public whiteBoard: WhiteBoard;
     private lastTokenSelection: Date;
 
     constructor(
-        private drawService: DrawService
+        private drawService: DrawService,
+        private mapService: MapService
     ) { }
 
     public ngOnInit() {
         this.whiteBoard = new WhiteBoard('white-board');
-        this.initLayerVisibility();
         this.initTokenEvents();
         this.initSynchronizeEvents();
-    }
-
-    public ngOnChanges(changes: SimpleChanges): void {
-        if (this.selectedMap) {
-            if (changes.selectedMap) {
-                this.loadMap();
-            }
-            if (changes.tokens) {
-                this.whiteBoard.updateTokens(this.selectedMap.settings.tokens);
-            }
-        } else {
-            if (this.whiteBoard) {
-                this.whiteBoard.reset(true);
-            }
-        }
-    }
-
-    public loadMap(): void {
-        this.whiteBoard.loadMap(this.selectedMap, this.inDmMode);
-        this.initToolbox();
+        this.initMapServiceEvents();
     }
 
     public setSelectedPaintMode(paintMode: Drawer): void {
@@ -82,45 +62,31 @@ export class WhiteboardComponent implements OnInit, OnChanges {
         this.drawService.setPenSize(this.selectedPenSize);
     }
 
-    private initLayerVisibility(): void {
-        if (this.inDmMode) {
-            this.whiteBoard.mapWithFogOfWarLayer.hide();
-            this.whiteBoard.backLayer.show();
-            this.whiteBoard.fogOfWarLayer.show();
-            this.whiteBoard.mapLayer.show();
-            this.whiteBoard.dmNotesLayer.show();
-        } else {
-            this.whiteBoard.mapWithFogOfWarLayer.show();
-            this.whiteBoard.backLayer.hide();
-            this.whiteBoard.fogOfWarLayer.hide();
-            this.whiteBoard.mapLayer.hide();
-            this.whiteBoard.dmNotesLayer.hide();
-        }
-    }
-
     private initToolbox(): void {
-        this.paintModes = this.inDmMode ? [
+        this.paintModes = this.mapService.inDmMode ? [
             new FogDrawer(
                 this.drawService,
                 this.whiteBoardRef.nativeElement,
                 this.synchronize,
+                this.mapService,
                 this.whiteBoard,
                 this.whiteBoard.fogOfWarLayer,
-                { x: this.selectedMap.settings.width, y: this.selectedMap.settings.height }),
+                { x: this.mapService.mapData.settings.width, y: this.mapService.mapData.settings.height }),
             new FogEraser(
                 this.drawService,
                 this.whiteBoardRef.nativeElement,
                 this.synchronize,
+                this.mapService,
                 this.whiteBoard,
                 this.whiteBoard.fogOfWarLayer,
-                { x: this.selectedMap.settings.width, y: this.selectedMap.settings.height })
+                { x: this.mapService.mapData.settings.width, y: this.mapService.mapData.settings.height })
         ] : [];
 
-        this.selectedPaintMode = this.inDmMode ? this.paintModes[0] : null;
-        if (this.inDmMode) {
+        this.selectedPaintMode = this.mapService.inDmMode ? this.paintModes[0] : null;
+        if (this.mapService.inDmMode) {
             this.selectedPaintMode.activate();
         }
-        this.selectedPenSize = this.inDmMode ? LARGE : SMALL;
+        this.selectedPenSize = this.mapService.inDmMode ? LARGE : SMALL;
     }
 
     private initTokenEvents(): void {
@@ -144,19 +110,23 @@ export class WhiteboardComponent implements OnInit, OnChanges {
             this.whiteBoard.updateDistances();
         });
         this.whiteBoard.tokensChanged.subscribe(token => {
-            this.synchronize.updateSettings(this.selectedMap.name, this.selectedMap.settings);
+            this.synchronize.updateSettings(this.mapService.mapData.name, this.mapService.mapData.settings);
         });
     }
 
     private initSynchronizeEvents(): void {
         if (this.synchronize) {
-            this.synchronize.mapUpdateRecieved.subscribe(update => this.whiteBoard.loadMap(update.value, this.inDmMode));
-            this.synchronize.scenarioMapUpdateRecieved.subscribe(update => this.whiteBoard.updateScenarioMap(update.value));
-            this.synchronize.fogOfWarUpdateRecieved.subscribe(update => this.whiteBoard.updateFogOfWar(update.value));
-            this.synchronize.mapWithFogOfWarUpdateRecieved.subscribe(update => this.whiteBoard.updateMapWithFogOfWar(update.value));
-            this.synchronize.dmNotesUpdateRecieved.subscribe(update => this.whiteBoard.updateDmNotes(update.value));
-            this.synchronize.playerNotesUpdateRecieved.subscribe(update => this.whiteBoard.updatePlayerNotes(update.value));
-            this.synchronize.settingsUpdateRecieved.subscribe(update => this.whiteBoard.updateSettings(update.value));
+            // this.synchronize.mapUpdateRecieved.subscribe(update => this.whiteBoard.loadMap(update.value, this.mapService.inDmMode));
+            /*this.synchronize.scenarioMapUpdateRecieved.subscribe(update => this.map.updateScenarioMap(update.value));
+            this.synchronize.fogOfWarUpdateRecieved.subscribe(update => this.map.updateFogOfWar(update.value));
+            this.synchronize.mapWithFogOfWarUpdateRecieved.subscribe(update => this.map.updateMapWithFogOfWar(update.value));
+            this.synchronize.dmNotesUpdateRecieved.subscribe(update => this.map.updateDmNotes(update.value));
+            this.synchronize.playerNotesUpdateRecieved.subscribe(update => this.map.updatePlayerNotes(update.value));
+            this.synchronize.settingsUpdateRecieved.subscribe(update => this.map.updateSettings(update.value));*/
         }
+    }
+
+    private initMapServiceEvents(): void {
+        this.mapService.onMapLoad.subscribe(_ => this.initToolbox());
     }
 }

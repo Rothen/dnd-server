@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as ws from 'ws';
 import * as dgram from 'dgram';
-import { Map } from '../../interfaces/map';
+import { MapData } from '../../interfaces/map-data';
 import { Subject } from 'rxjs';
 
 @Injectable({
