@@ -143,14 +143,18 @@ export class DrawService {
         const rec = {
             x: position.x,
             y: position.y,
-            width: this.copySize.x * scale.x,
-            height: this.copySize.y * scale.y,
+            width: Math.ceil(this.copySize.x * scale.x),
+            height: Math.ceil(this.copySize.y * scale.y),
             pixelRatio: 1 / scale.x
         };
 
         from(this.layer.toImage(rec)).subscribe(res => {
             this.layer.destroyChildren();
-            this.layer.add(new Konva.Image({ image: res as any }));
+            this.layer.add(new Konva.Image({
+                image: res as any,
+                width: this.copySize.x,
+                height: this.copySize.y
+            }));
             this.strokeEndSubject.next();
         });
     }
