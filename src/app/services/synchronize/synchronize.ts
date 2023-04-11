@@ -30,31 +30,31 @@ export abstract class Synchronize {
     public playerNotesUpdateRecieved: Subject<StringUpdate> = new Subject();
     public settingsUpdateRecieved: Subject<MapSettingsUpdate> = new Subject();
 
-    protected handleUpdate(data: any): void {
+    protected handleUpdate(data: MapUpdate | StringUpdate | MapSettingsUpdate): void {
         switch (data.update) {
             case 'map_delete':
-                this.mapDeleteRecieved.next(data);
+                this.mapDeleteRecieved.next(data as MapUpdate);
                 break;
             case 'map':
-                this.mapUpdateRecieved.next(data);
+                this.mapUpdateRecieved.next(data as MapUpdate);
                 break;
             case 'scenario_map':
-                this.scenarioMapUpdateRecieved.next(data);
+                this.scenarioMapUpdateRecieved.next(data as StringUpdate);
                 break;
             case 'fog_of_war':
-                this.fogOfWarUpdateRecieved.next(data);
+                this.fogOfWarUpdateRecieved.next(data as StringUpdate);
                 break;
             case 'map_with_fog_of_war':
-                this.mapWithFogOfWarUpdateRecieved.next(data);
+                this.mapWithFogOfWarUpdateRecieved.next(data as StringUpdate);
                 break;
             case 'dm_notes':
-                this.dmNotesUpdateRecieved.next(data);
+                this.dmNotesUpdateRecieved.next(data as StringUpdate);
                 break;
             case 'player_notes':
-                this.playerNotesUpdateRecieved.next(data);
+                this.playerNotesUpdateRecieved.next(data as StringUpdate);
                 break;
             case 'settings':
-                this.settingsUpdateRecieved.next(data);
+                this.settingsUpdateRecieved.next(data as MapSettingsUpdate);
                 break;
         }
     }

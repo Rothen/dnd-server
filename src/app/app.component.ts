@@ -56,7 +56,15 @@ export class AppComponent implements OnInit, AfterViewInit {
         private webSocketServer: WebSocketServerService,
         private webSocketClient: WebSocketService,
         private serverDiscoveryService: ServerDiscoveryService
-    ) { }
+    ) {
+        document.addEventListener("contextmenu", function (e) {
+            e.preventDefault();
+        }, false);
+    }
+
+    get isElectron(): boolean {
+        return !!(window && window.process && window.process.type);
+    }
 
     public ngOnInit() {
         this.maps = this.storageService.listMaps();
@@ -129,7 +137,6 @@ export class AppComponent implements OnInit, AfterViewInit {
     }
 
     public updateTokens(): void {
-        // this.mapService.update(this.selectedMap);
         this.synchronize.updateSettings(this.selectedMap.name, this.selectedMap.settings);
     }
 
@@ -171,5 +178,13 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.synchronize.settingsUpdateRecieved.subscribe(update => {
             this.mapService.update(update.value);
         });
+    }
+    
+    public validateIPaddress(ipaddress) {
+        if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress)) {
+            return (true)
+        }
+        alert("You have entered an invalid IP address!")
+        return (false)
     }
 }

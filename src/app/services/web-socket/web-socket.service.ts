@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import * as ws from 'ws';
 import { Subject } from 'rxjs';
 import { UpdateData } from '../web-socket-server/web-socket-server.service';
 
@@ -7,23 +6,11 @@ import { UpdateData } from '../web-socket-server/web-socket-server.service';
     providedIn: 'root'
 })
 export class WebSocketService {
-    ws: typeof ws;
-
     public onUpdateRecieved: Subject<UpdateData> = new Subject();
 
-    private server: ws.WebSocket;
+    private server: WebSocket;
     private host: string;
     private port: number;
-
-    constructor() {
-        if (this.isElectron) {
-            this.ws = window.require('ws');
-        }
-    }
-
-    get isElectron(): boolean {
-        return !!(window && window.process && window.process.type);
-    }
 
     public updateServer(data: any): void {
         this.server.send(JSON.stringify(data));
@@ -45,18 +32,20 @@ export class WebSocketService {
     }
 
     private startWebSocket(): void {
-        this.server = new this.ws.WebSocket(`ws://${this.host}:${this.port}`);
+        this.server = new WebSocket(`ws://${this.host}:${this.port}`);
 
-        this.server.on('error', console.error);
+        this.server.addEventListener('error', console.error);
 
-        this.server.on('open', _ => {
+        this.server.addEventListener('open', _ => {
             console.log('connected to websocket server');
         });
 
-        this.server.on('message', data => {
-            console.log('received data');
-            if (data.toString().length > 0) {
-                this.onUpdateRecieved.next(JSON.parse(data.toString()));
+        this.server.addEventListener('message', (message: MessageEvent) => {
+            if (message.data.length > 0) {
+                this.onUpdateRecieved.next({
+                    client: this.server as any,
+                    data: JSON.parse(message.data)
+                });
             }
         });
     }

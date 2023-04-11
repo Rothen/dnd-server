@@ -13,9 +13,10 @@ export class ClientSynchronizeService extends Synchronize {
     ) {
         super();
 
-        if (this.isElectron) {
-            this.webSocketService.onUpdateRecieved.subscribe(data => this.handleUpdate(data));
-        }
+        this.webSocketService.onUpdateRecieved.subscribe(data => {
+            console.log(data);
+            this.handleUpdate(data.data);
+        });
     }
 
     get isElectron(): boolean {

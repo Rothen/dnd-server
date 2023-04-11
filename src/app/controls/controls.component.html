@@ -20,7 +20,7 @@
 
     <span class="example-spacer"></span>
 
-    <button *ngIf="mapService.mapData" mat-icon-button (click)="deleteMapClick()">
+    <button *ngIf="mapService.mapData && mapService.inDmMode" mat-icon-button (click)="deleteMapClick()">
         <mat-icon>delete</mat-icon>
     </button>
 </mat-toolbar>
