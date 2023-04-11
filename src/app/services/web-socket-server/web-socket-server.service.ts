@@ -3,6 +3,12 @@ import * as ws from 'ws';
 import * as fs from 'fs';
 import * as dgram from 'dgram';
 import { Subject } from 'rxjs';
+import { MapSettingsUpdate, MapUpdate, StringUpdate } from '../synchronize/synchronize';
+
+export interface UpdateData {
+    client: ws.WebSocket;
+    data: MapUpdate | StringUpdate | MapSettingsUpdate;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -13,11 +19,11 @@ export class WebSocketServerService {
     dgram: typeof dgram;
 
     public clientConnectedSubject: Subject<ws.WebSocket> = new Subject();
-    public onUpdateRecieved: Subject<{ client: ws.WebSocket; data: any }> = new Subject();
+    public onUpdateRecieved: Subject<UpdateData> = new Subject();
+    public clients: ws.WebSocket[] = [];
 
-    private dgramSocket: dgram.Socket;
     private server: ws.WebSocketServer;
-    private clients: ws.WebSocket[] = [];
+    private dgramSocket: dgram.Socket;
 
     constructor() {
         if (this.isElectron) {

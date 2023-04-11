@@ -3,7 +3,7 @@ import { MapData } from '../../interfaces/map-data';
 import { MapSettingsData } from '../../interfaces/map-settings-data';
 import { Synchronize } from './synchronize';
 import { StorageService } from '../storage/storage.service';
-import { WebSocketServerService } from '../web-socket-server/web-socket-server.service';
+import { UpdateData, WebSocketServerService } from '../web-socket-server/web-socket-server.service';
 
 @Injectable({
     providedIn: 'root'
@@ -24,7 +24,10 @@ export class ServerSynchronizeService extends Synchronize {
                 this.storageService.storeSettingsFile(update.mapName, update.value);
             });
 
-            this.webSocketServerService.onUpdateRecieved.subscribe(data => this.handleUpdate(data.data));
+            this.webSocketServerService.onUpdateRecieved.subscribe(data => {
+                this.handleUpdate(data.data);
+                this.forward(data);
+            });
         }
     }
 
@@ -109,6 +112,18 @@ export class ServerSynchronizeService extends Synchronize {
             mapName,
             update: 'settings',
             value: mapSettings
+        });
+    }
+
+    private forward(data: UpdateData): void {
+        this.webSocketServerService.clients.forEach(client => {
+            if (client !== data.client) {
+                this.webSocketServerService.updateClient(client, {
+                    update: data.data.update,
+                    mapName: data.data.mapName,
+                    value: data.data.value
+                });
+            }
         });
     }
 }

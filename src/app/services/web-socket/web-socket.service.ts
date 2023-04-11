@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as ws from 'ws';
 import { Subject } from 'rxjs';
+import { UpdateData } from '../web-socket-server/web-socket-server.service';
 
 @Injectable({
     providedIn: 'root'
@@ -8,7 +9,7 @@ import { Subject } from 'rxjs';
 export class WebSocketService {
     ws: typeof ws;
 
-    public onUpdateRecieved: Subject<any> = new Subject();
+    public onUpdateRecieved: Subject<UpdateData> = new Subject();
 
     private server: ws.WebSocket;
     private host: string;
