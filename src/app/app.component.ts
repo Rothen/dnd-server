@@ -16,12 +16,29 @@ import { MapService } from './services/map/map.service';
 import { ServerDiscoveryService } from './services/server-discovery/server-discovery.service';
 import { WebSocketService } from './services/web-socket/web-socket.service';
 import { MatSelectionList } from '@angular/material/list';
+import { AbstractControl, FormControl, FormGroupDirective, NgForm, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { ErrorStateMatcher } from '@angular/material/core';
 
 interface DialogResult {
     name: string;
     map: Blob | MediaSource;
     mapBuffer: ArrayBuffer;
     pixelPerUnit: number;
+}
+
+export class MyErrorStateMatcher implements ErrorStateMatcher {
+    isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
+        const isSubmitted = form && form.submitted;
+        return !!(control && control.invalid && (control.dirty || control.touched || isSubmitted));
+    }
+}
+
+export function ipFormatValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+        /*eslint max-len: ["error", { "code": 800 }]*/
+        const ipFormat = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(control.value);
+        return ipFormat ? null : { ipFormat: { value: control.value } };
+    };
 }
 
 @Component({
@@ -44,6 +61,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     public inDmMode: boolean;
     public servers: string[];
     public selectedServer: string;
+    public serverFormControl: FormControl = new FormControl('', [Validators.required, ipFormatValidator()]);
 
     constructor(
         private storageService: StorageService,
@@ -57,7 +75,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         private webSocketClient: WebSocketService,
         private serverDiscoveryService: ServerDiscoveryService
     ) {
-        document.addEventListener("contextmenu", function (e) {
+        document.addEventListener('contextmenu', function(e) {
             e.preventDefault();
         }, false);
     }
@@ -85,6 +103,10 @@ export class AppComponent implements OnInit, AfterViewInit {
     }
 
     public modeSelected(): void {
+        if (!this.isElectron) {
+            this.selectedServer = this.serverFormControl.value;
+        }
+
         this.mapService.setInDmMode(this.inDmMode);
 
         if (this.synchronize) {
@@ -178,13 +200,5 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.synchronize.settingsUpdateRecieved.subscribe(update => {
             this.mapService.update(update.value);
         });
-    }
-    
-    public validateIPaddress(ipaddress) {
-        if (/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(ipaddress)) {
-            return (true)
-        }
-        alert("You have entered an invalid IP address!")
-        return (false)
     }
 }

@@ -21,6 +21,7 @@ export class WebSocketServerService {
     public clientConnectedSubject: Subject<ws.WebSocket> = new Subject();
     public onUpdateRecieved: Subject<UpdateData> = new Subject();
     public clients: ws.WebSocket[] = [];
+    public listeningAddress: string;
 
     private server: ws.WebSocketServer;
     private dgramSocket: dgram.Socket;
@@ -85,6 +86,7 @@ export class WebSocketServerService {
 
         this.dgramSocket.on('listening', () => {
             const address = this.dgramSocket.address();
+            this.listeningAddress = address.address;
             console.log('UDP socket listening on ' + address.address + ':' + address.port);
         });
 

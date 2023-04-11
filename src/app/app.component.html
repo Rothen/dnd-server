@@ -36,11 +36,17 @@
         <mat-card-content>
             <mat-form-field class="example-full-width" style="width: 100%;">
                 <mat-label>Server IP</mat-label>
-                <input matInput [(ngModel)]="selectedServer">
+                <input matInput [formControl]="serverFormControl">
+                <mat-error *ngIf="serverFormControl.hasError('ipFormat') && !serverFormControl.hasError('required')">
+                    Please enter a valid ip address
+                </mat-error>
+                <mat-error *ngIf="serverFormControl.hasError('required')">
+                    Server is required
+                </mat-error>
             </mat-form-field>
         </mat-card-content>
         <mat-card-actions>
-            <button mat-button color="accent" (click)="inDmMode = false;modeSelected()" [disabled]="!selectedServer">Join</button>
+            <button mat-button color="accent" (click)="inDmMode = false;modeSelected()" [disabled]="!serverFormControl.valid">Join</button>
         </mat-card-actions>
     </mat-card>
 </div>
