@@ -55,7 +55,7 @@ export class ServerDiscoveryService {
             if (!this.discoveredServers.find(discoveredServer => discoveredServer.name === remote.address)) {
                 this.discoveredServers.push({
                     name: remote.address,
-                    port: 8080
+                    port: 8081
                 });
                 this.onDiscovered.next(this.discoveredServers);
             }

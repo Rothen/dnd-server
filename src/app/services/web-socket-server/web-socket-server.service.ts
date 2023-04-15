@@ -66,9 +66,11 @@ export class WebSocketServerService {
     }
 
     private startWebSocketServer(): void {
-        this.server = new this.ws.WebSocketServer({ port: 8080 });
+        console.log('starting websocket server');
+        this.server = new this.ws.WebSocketServer({ host: '0.0.0.0', port: 8081 });
 
         this.server.on('connection', client => {
+            console.log(client);
             this.clients.push(client);
             this.clientConnectedSubject.next(client);
 

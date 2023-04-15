@@ -118,7 +118,7 @@ export class AppComponent implements OnInit, AfterViewInit {
             this.selectedServer = null;
             this.synchronize = this.serverSyncronizeService;
         } else {
-            this.webSocketClient.setServer(this.selectedServer, 8080);
+            this.webSocketClient.setServer(this.selectedServer, 8081);
             this.synchronize = this.clientSyncronizeService;
         }
 
