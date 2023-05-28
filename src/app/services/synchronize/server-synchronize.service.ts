@@ -4,6 +4,7 @@ import { MapSettingsData } from '../../interfaces/map-settings-data';
 import { Synchronize } from './synchronize';
 import { StorageService } from '../storage/storage.service';
 import { UpdateData, WebSocketServerService } from '../web-socket-server/web-socket-server.service';
+import { Subscription } from 'rxjs';
 
 @Injectable({
     providedIn: 'root'
@@ -18,6 +19,7 @@ export class ServerSynchronizeService extends Synchronize {
     private pausedUpdateDmNotesData: any;
     private pausedUpdatePlayerNotesData: any;
     private pausedUpdateSettingsData: any;
+    private updateRecievedSubscription: Subscription = null;
 
     constructor(
         private storageService: StorageService,
@@ -34,10 +36,7 @@ export class ServerSynchronizeService extends Synchronize {
                 this.storageService.storeSettingsFile(update.mapName, update.value);
             });
 
-            this.webSocketServerService.onUpdateRecieved.subscribe(data => {
-                this.handleUpdate(data.data);
-                this.forward(data);
-            });
+            this.subscribeToUpdate();
         }
     }
 
@@ -55,9 +54,16 @@ export class ServerSynchronizeService extends Synchronize {
 
     public pauseSynchronizing(): void {
         this.isPaused = true;
+
+        if (this.updateRecievedSubscription !== null) {
+            this.updateRecievedSubscription.unsubscribe();
+            this.updateRecievedSubscription = null;
+        }
     }
 
     public resumeSynchronizing(): void {
+        this.subscribeToUpdate();
+
         if (this.pausedUpdateMapData) {
             this.webSocketServerService.updateClients(this.pausedUpdateMapData);
             this.pausedUpdateMapData = null;
@@ -199,6 +205,13 @@ export class ServerSynchronizeService extends Synchronize {
             this.webSocketServerService.updateClients(this.pausedUpdateSettingsData);
             this.pausedUpdateSettingsData = null;
         }
+    }
+
+    private subscribeToUpdate(): void {
+        this.updateRecievedSubscription = this.webSocketServerService.onUpdateRecieved.subscribe(data => {
+            this.handleUpdate(data.data);
+            this.forward(data);
+        });
     }
 
     private forward(data: UpdateData): void {

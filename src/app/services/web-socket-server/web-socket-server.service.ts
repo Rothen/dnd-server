@@ -66,18 +66,6 @@ export class WebSocketServerService {
         }
     }
 
-    public pause(): void {
-        this.pausedServer = this.server;
-        this.server = {
-            send: (data: string) => null
-        } as any;
-    }
-
-    public resume(): void {
-        this.server = this.pausedServer;
-        this.pausedServer = null;
-    }
-
     private startWebSocketServer(): void {
         console.log('starting websocket server');
         this.server = new this.ws.WebSocketServer({ host: '0.0.0.0', port: 8081 });

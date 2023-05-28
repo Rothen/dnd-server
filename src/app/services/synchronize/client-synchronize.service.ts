@@ -32,11 +32,11 @@ export class ClientSynchronizeService extends Synchronize {
     }
 
     public pauseSynchronizing(): void {
-        this.webSocketService.pause();
+        // Ignore
     }
 
     public resumeSynchronizing(): void {
-        this.webSocketService.resume();
+        // Ignore
     }
 
     public deleteMap(map: MapData): void {
