@@ -94,6 +94,7 @@ export class WhiteBoard {
     }
 
     public initStage(containerId: string): void {
+        Konva.hitOnDragEnabled = true;
         const width = window.innerWidth;
         const height = window.innerHeight;
 
@@ -141,6 +142,81 @@ export class WhiteBoard {
                 y: pointer.y - mousePointTo.y * newScale,
             };
             this.stage.position(newPos);
+        });
+
+        let lastCenter = null;
+        let lastDist = 0;
+
+        function getCenter(p1, p2) {
+            return {
+                x: (p1.x + p2.x) / 2,
+                y: (p1.y + p2.y) / 2,
+            };
+        }
+
+        this.stage.on('touchmove', e => {
+            e.evt.preventDefault();
+            const touch1 = e.evt.touches[0];
+            const touch2 = e.evt.touches[1];
+
+            if (touch1 && touch2) {
+                // if the stage was under Konva's drag&drop
+                // we need to stop it, and implement our own pan logic with two pointers
+                if (this.stage.isDragging()) {
+                    this.stage.stopDrag();
+                }
+
+                const p1 = {
+                    x: touch1.clientX,
+                    y: touch1.clientY,
+                };
+                const p2 = {
+                    x: touch2.clientX,
+                    y: touch2.clientY,
+                };
+
+                if (!lastCenter) {
+                    lastCenter = getCenter(p1, p2);
+                    return;
+                }
+                const newCenter = getCenter(p1, p2);
+
+                const dist = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+
+                if (!lastDist) {
+                    lastDist = dist;
+                }
+
+                // local coordinates of center point
+                const pointTo = {
+                    x: (newCenter.x - this.stage.x()) / this.stage.scaleX(),
+                    y: (newCenter.y - this.stage.y()) / this.stage.scaleX(),
+                };
+
+                const scale = this.stage.scaleX() * (dist / lastDist);
+
+                this.stage.scaleX(scale);
+                this.stage.scaleY(scale);
+
+                // calculate new position of the stage
+                const dx = newCenter.x - lastCenter.x;
+                const dy = newCenter.y - lastCenter.y;
+
+                const newPos = {
+                    x: newCenter.x - pointTo.x * scale + dx,
+                    y: newCenter.y - pointTo.y * scale + dy,
+                };
+
+                this.stage.position(newPos);
+
+                lastDist = dist;
+                lastCenter = newCenter;
+            }
+        });
+
+        this.stage.on('touchend', function() {
+            lastDist = 0;
+            lastCenter = null;
         });
     }
 

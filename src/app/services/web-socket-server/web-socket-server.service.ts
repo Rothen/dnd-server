@@ -24,6 +24,7 @@ export class WebSocketServerService {
     public listeningAddress: string;
 
     private server: ws.WebSocketServer;
+    private pausedServer: ws.WebSocketServer;
     private dgramSocket: dgram.Socket;
 
     constructor() {
@@ -63,6 +64,18 @@ export class WebSocketServerService {
         if (this.server) {
             this.server.close();
         }
+    }
+
+    public pause(): void {
+        this.pausedServer = this.server;
+        this.server = {
+            send: (data: string) => null
+        } as any;
+    }
+
+    public resume(): void {
+        this.server = this.pausedServer;
+        this.pausedServer = null;
     }
 
     private startWebSocketServer(): void {

@@ -21,6 +21,7 @@ export class ControlsComponent implements OnInit {
     @Output() deleteMap = new EventEmitter<MapData>();
 
     public selectedToken: TokenData;
+    public isPaused = false;
 
     constructor(
         private mapDataServcie: MapDataService,
@@ -72,5 +73,15 @@ export class ControlsComponent implements OnInit {
     public setSelectedMap(map: MapData): void {
         this.mapService.load(map);
         this.synchronize.updateMap(map);
+    }
+
+    public pause(): void {
+        this.isPaused = true;
+        this.synchronize.pauseSynchronizing();
+    }
+
+    public resume(): void {
+        this.isPaused = false;
+        this.synchronize.resumeSynchronizing();
     }
 }

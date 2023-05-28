@@ -61,6 +61,8 @@ export abstract class Synchronize {
 
     abstract startSynchronizing(): void;
     abstract stopSynchronizing(): void;
+    abstract pauseSynchronizing(): void;
+    abstract resumeSynchronizing(): void;
     abstract deleteMap(map: MapData): void;
     abstract updateMap(map: MapData): void;
     abstract updateScenarioMap(mapName: string, scenarioMap: string): void;

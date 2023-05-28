@@ -9,6 +9,7 @@ export class WebSocketService {
     public onUpdateRecieved: Subject<UpdateData> = new Subject();
 
     private server: WebSocket;
+    private pausedServer: WebSocket;
     private host: string;
     private port: number;
 
@@ -24,6 +25,18 @@ export class WebSocketService {
         if (this.server) {
             this.server.close();
         }
+    }
+
+    public pause(): void {
+        this.pausedServer = this.server;
+        this.server = {
+            send: (data: string) => null
+        } as any;
+    }
+
+    public resume(): void {
+        this.server = this.pausedServer;
+        this.pausedServer = null;
     }
 
     public setServer(host: string, port: number): void {

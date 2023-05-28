@@ -20,7 +20,13 @@
 
     <span class="example-spacer"></span>
 
-    <button *ngIf="mapService.mapData && mapService.inDmMode" mat-icon-button (click)="deleteMapClick()">
+    <button *ngIf="mapService.mapData && mapService.inDmMode && !isPaused" mat-icon-button (click)="pause()" matTooltip="pause">
+        <mat-icon>pause</mat-icon>
+    </button>
+    <button *ngIf="mapService.mapData && mapService.inDmMode && isPaused" mat-icon-button (click)="resume()" matTooltip="resume">
+        <mat-icon>play_arrow</mat-icon>
+    </button>
+    <button *ngIf="mapService.mapData && mapService.inDmMode" mat-icon-button (click)="deleteMapClick()" matTooltip="delete">
         <mat-icon>delete</mat-icon>
     </button>
 </mat-toolbar>
